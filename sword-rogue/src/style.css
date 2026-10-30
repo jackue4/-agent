@@ -1,0 +1,301 @@
+:root {
+  color-scheme: dark;
+  --ink: #100e0c;
+  --paper: #f3e6c8;
+  --gold: #e4c27a;
+  --gold-dim: rgba(228, 194, 122, 0.35);
+  --blood: #c44536;
+  --jade: #8fd0b0;
+  --line: rgba(243, 230, 200, 0.16);
+  font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--ink); overflow: hidden; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
+
+#ui { position: fixed; inset: 0; pointer-events: none; }
+#ui button, #ui .card, #ui .weapon, #title, #modal, #pause, #result { pointer-events: auto; }
+
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px 40px;
+  background: radial-gradient(ellipse at center, rgba(16, 14, 12, 0.2), rgba(16, 14, 12, 0.78) 70%);
+  text-align: center;
+}
+.screen[hidden] { display: none; }
+#modal, #pause, #result { background: rgba(12, 10, 8, 0.62); }
+.kicker {
+  margin: 0 0 6px;
+  letter-spacing: 0.42em;
+  color: var(--gold);
+  font-size: 12px;
+}
+h1, h2 {
+  margin: 0;
+  font-family: "SimSun", "Songti SC", serif;
+  font-weight: 500;
+  color: var(--paper);
+}
+h1 { font-size: 64px; letter-spacing: 0.18em; }
+h2 { font-size: 36px; letter-spacing: 0.12em; }
+.lead, .sub {
+  max-width: 640px;
+  color: rgba(243, 230, 200, 0.82);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+.lead { margin: 12px 0 22px; }
+
+#weapons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 280px));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.weapon, .card, .primary, .row button {
+  border: 1px solid var(--gold-dim);
+  background: rgba(16, 14, 12, 0.72);
+  color: var(--paper);
+  text-align: left;
+}
+.weapon {
+  padding: 14px 14px 12px;
+  min-height: 108px;
+}
+.weapon strong, .card strong { display: block; font-size: 18px; letter-spacing: 0.12em; }
+.weapon span, .card span { display: block; margin-top: 6px; color: rgba(243, 230, 200, 0.78); line-height: 1.5; font-size: 13px; }
+.weapon.on, .card:hover, .weapon:hover, .primary:hover, .row button:hover {
+  border-color: var(--gold);
+  background: rgba(48, 36, 22, 0.88);
+}
+.primary, .row button {
+  padding: 12px 22px;
+  letter-spacing: 0.16em;
+  text-align: center;
+}
+.primary { background: var(--blood); border-color: transparent; }
+.row { display: flex; gap: 12px; margin-top: 18px; }
+
+.cards {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.card {
+  width: min(280px, 86vw);
+  min-height: 160px;
+  padding: 16px;
+  position: relative;
+}
+.card em {
+  font-style: normal;
+  color: var(--gold);
+  margin-right: 8px;
+}
+.card strong { display: inline; }
+.card small {
+  display: block;
+  margin-top: 10px;
+  color: var(--gold);
+  letter-spacing: 0.2em;
+}
+
+#hud {
+  position: absolute;
+  inset: 0;
+  padding: 16px 18px;
+}
+#hud[hidden] { display: none; }
+.top {
+  display: grid;
+  grid-template-columns: 1fr minmax(220px, 420px) 1fr;
+  gap: 12px;
+  align-items: center;
+}
+#room-label, #stance {
+  color: var(--paper);
+  letter-spacing: 0.08em;
+  text-shadow: 0 1px 2px #000;
+}
+#stance { text-align: right; }
+#stance[data-mode="focus"] { color: #b7e4ff; }
+#stance[data-mode="move"] { color: var(--gold); }
+.bars { display: flex; flex-direction: column; gap: 4px; }
+.hp, .xp {
+  position: relative;
+  height: 16px;
+  border: 1px solid var(--gold-dim);
+  background: rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+.xp { height: 6px; }
+#hp-fill, #xp-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--blood);
+}
+#xp-fill { background: var(--gold); }
+#hp-text {
+  position: absolute;
+  inset: 0;
+  text-align: center;
+  font-size: 12px;
+  line-height: 16px;
+  color: white;
+  text-shadow: 0 1px 1px #000;
+}
+#party {
+  position: absolute;
+  top: 72px;
+  left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mate {
+  min-width: 120px;
+  background: rgba(16, 14, 12, 0.55);
+  border: 1px solid var(--gold-dim);
+  padding: 4px 8px;
+}
+.mate b { display: block; font-size: 12px; letter-spacing: 0.12em; }
+.mate i { display: block; height: 4px; background: var(--blood); margin-top: 4px; }
+.mate.down { opacity: 0.45; }
+#room-link {
+  width: min(640px, 92vw);
+  color: var(--gold);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--gold-dim);
+  padding: 10px 12px;
+  text-align: center;
+}
+#room-code {
+  margin: 4px 0 8px;
+  font-size: 52px;
+  letter-spacing: 0.32em;
+  color: var(--gold);
+  font-family: "SimSun", "Songti SC", serif;
+}
+#copy-state { min-height: 1.4em; color: var(--paper); }
+.join-row { display: flex; gap: 8px; margin-top: 14px; justify-content: center; }
+#join-code {
+  width: 7.2em;
+  padding: 10px 8px;
+  text-align: center;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--gold-dim);
+  color: var(--paper);
+}
+#lobby-members { list-style: none; padding: 0; color: var(--paper); }
+#lobby-members li { margin: 4px 0; letter-spacing: 0.12em; }
+#lobby-weapons { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 12px 0; }
+#lobby-weapons .weapon { min-height: 0; padding: 8px 12px; }
+#skills {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 42px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+#skills i {
+  font-style: normal;
+  border: 1px solid var(--gold-dim);
+  padding: 3px 8px;
+  color: var(--paper);
+  background: rgba(0, 0, 0, 0.4);
+  font-size: 13px;
+}
+#hint {
+  position: absolute;
+  left: 18px;
+  bottom: 14px;
+  margin: 0;
+  color: rgba(243, 230, 200, 0.7);
+  font-size: 12px;
+}
+#mute {
+  position: absolute;
+  right: 18px;
+  bottom: 12px;
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--gold-dim);
+  color: var(--paper);
+  padding: 6px 10px;
+}
+
+#toasts {
+  position: absolute;
+  top: 46%;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.toast {
+  background: rgba(16, 14, 12, 0.82);
+  color: var(--paper);
+  border: 1px solid var(--gold-dim);
+  padding: 8px 14px;
+  letter-spacing: 0.08em;
+  animation: fade 2.2s ease forwards;
+}
+@keyframes fade {
+  0% { opacity: 0; transform: translateY(6px); }
+  12% { opacity: 1; transform: none; }
+  75% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.float {
+  position: absolute;
+  color: #fff6ea;
+  font-weight: 700;
+  text-shadow: 0 1px 2px #000;
+  pointer-events: none;
+  animation: rise 0.7s ease forwards;
+}
+.float.crit { color: #ffd56a; font-size: 20px; }
+@keyframes rise {
+  to { transform: translateY(-28px); opacity: 0; }
+}
+#stick {
+  position: fixed;
+  width: 86px;
+  height: 86px;
+  margin: -43px 0 0 -43px;
+  border: 1px solid var(--gold-dim);
+  border-radius: 50%;
+  pointer-events: none;
+}
+#stick i {
+  position: absolute;
+  left: 31px;
+  top: 31px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(228, 194, 122, 0.8);
+}
+@media (max-width: 720px) {
+  h1 { font-size: 42px; }
+  #weapons { grid-template-columns: 1fr; }
+  .top { grid-template-columns: 1fr; }
+  #stance { text-align: left; }
+}

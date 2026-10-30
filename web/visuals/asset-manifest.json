@@ -1,0 +1,39 @@
+{
+  "updated_on": "2026-10-27",
+  "source": "Built-in image generation tool",
+  "prompt_record": "generation-prompts.md",
+  "art_direction": "Midnight graphite and restrained ice-cyan interface, paired with a cheerful original pixel-art engineer in a yellow hardhat and teal workwear.",
+  "assets": [
+    {
+      "id": "ai-robot",
+      "display_name": "Original pixel engineer",
+      "generated_on": "2026-10-27",
+      "prompt_record": "pixel-engineer-prompt.md",
+      "file": "ai-robot.png",
+      "download_copy": "pixel-engineer.png",
+      "runtime_copy": "../../runtime/art/ai-robot.png",
+      "dimensions": [1254, 1254],
+      "format": "RGBA PNG",
+      "transparent_background": true,
+      "pivot": [0.5, 0.5],
+      "sha256": "f0d3ac49c5a76e4d9cebee9a14a1b6b69d9bebbf98ccc2c49e3824f73431f281",
+      "usage": ["Website identity and chat control", "2D game construction assistant", "3D camera-facing construction assistant icon"],
+      "runtime_import": "Lossless texture, alpha border fix, no mipmaps, nearest-neighbor filtering",
+      "style_note": "Generated pixel-style illustration; not a strict authored 64x64 sprite grid",
+      "original_preserved": true,
+      "post_processing": "None; original transparent PNG copied into both web and runtime folders"
+    },
+    {
+      "id": "studio-atmosphere",
+      "generated_on": "2026-10-26",
+      "file": "studio-atmosphere.png",
+      "dimensions": [1672, 941],
+      "format": "RGB PNG",
+      "transparent_background": false,
+      "sha256": "e1bbe6219b96d632705efb850dcd1d9356371a24bc16925034b1f1309afcf48b",
+      "usage": ["Home page surroundings", "Editor background outside the game frame", "Play page surroundings"],
+      "original_preserved": true,
+      "post_processing": "None; tonal overlay and responsive crop are applied only through CSS"
+    }
+  ]
+}

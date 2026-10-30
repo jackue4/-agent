@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>飞剑传说</title>
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div id="stick" hidden><i></i></div>
+  <div id="ui">
+    <div id="hud" hidden>
+      <header class="top">
+        <div id="room-label">第 1 / 10 房</div>
+        <div class="bars">
+          <div class="hp"><span id="hp-text"></span><i id="hp-fill"></i></div>
+          <div class="xp"><i id="xp-fill"></i></div>
+        </div>
+        <div id="stance" data-mode="charge">聚剑</div>
+      </header>
+      <div id="party"></div>
+      <div id="skills"></div>
+      <p id="hint">WASD 或拖拽移动 · 站住出剑 · Esc 暂停</p>
+      <button id="mute" type="button">声音开</button>
+    </div>
+    <div id="toasts"></div>
+    <div id="floats"></div>
+
+    <section id="title" class="screen">
+      <p class="kicker">房间肉鸽</p>
+      <h1>飞剑传说</h1>
+      <p class="lead">站住，剑阵飞出再飞回。移动，剑只绕身护体。一章十房，死了这局剑招清空。</p>
+      <div id="weapons"></div>
+      <button id="start" type="button" class="primary">持剑入房</button>
+      <button id="host-room" type="button">邀请朋友一起玩</button>
+      <div class="join-row">
+        <input id="join-code" maxlength="4" placeholder="房间号" autocomplete="off" spellcheck="false" />
+        <button id="join-room" type="button">加入房间</button>
+      </div>
+    </section>
+
+    <section id="lobby" class="screen" hidden>
+      <p class="kicker">联机</p>
+      <h2>把链接发给朋友</h2>
+      <p class="sub" id="lobby-note">同一 Wi-Fi 下打开本页，输入房间号就能进。房主的页面要一直开着。</p>
+      <p id="room-code"></p>
+      <input id="room-link" readonly />
+      <button id="copy-link" type="button">复制链接</button>
+      <p id="copy-state"></p>
+      <div id="lobby-weapons"></div>
+      <ul id="lobby-members"></ul>
+      <button id="launch" type="button" class="primary" hidden>一起出发</button>
+    </section>
+
+    <section id="modal" class="screen" hidden>
+      <p class="kicker"></p>
+      <h2></h2>
+      <p class="sub"></p>
+      <div class="cards"></div>
+    </section>
+
+    <section id="pause" class="screen" hidden>
+      <p class="kicker">暂停</p>
+      <h2>剑还停在空中</h2>
+      <div class="row">
+        <button id="resume" type="button" class="primary">继续</button>
+        <button id="pause-title" type="button">回标题</button>
+      </div>
+    </section>
+
+    <section id="result" class="screen" hidden>
+      <p class="kicker"></p>
+      <h2></h2>
+      <p class="sub"></p>
+      <div class="row">
+        <button id="retry" type="button" class="primary">再走一章</button>
+        <button id="back-title" type="button">回标题</button>
+      </div>
+    </section>
+  </div>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

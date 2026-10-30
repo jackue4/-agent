@@ -1,0 +1,139 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f0b1e">
+<title>造梦 · AI 游戏创作平台</title><link rel="stylesheet" href="/app.css"><link rel="stylesheet" href="/home.css"></head><body class="home">
+<div class="phone">
+  <!-- 发现: full-screen vertical feed, one game per screen -->
+  <section class="view" id="feedView">
+    <div class="ftop"><div class="logo"><i>✦</i>造梦</div><div class="seg" id="sortSeg"><button data-s="hot" class="on">推荐</button><button data-s="new">最新</button></div></div>
+    <div class="reel" id="feed"></div>
+  </section>
+
+  <!-- 我的 -->
+  <section class="view me" id="meView" hidden>
+    <div class="me-head"><div class="avatar">🦊</div><div><h2>我的工作室</h2><div class="stats" id="stats"></div></div></div>
+    <div class="me-tabs"><b>我的作品</b></div>
+    <div class="mgrid" id="mine"></div>
+  </section>
+
+  <nav class="tabbar">
+    <button data-tab="feed" class="on"><i>⌂</i>发现</button>
+    <button class="make" id="createBtn" aria-label="创作游戏"><span>＋</span></button>
+    <button data-tab="me"><i>☺</i>我的</button>
+  </nav>
+</div>
+<script type="module">
+import { $, $$, api, esc, toast, GENRE_CN } from '/common.js';
+
+// ---------------------------------------------------------------- create wizard
+const TYPES = [
+  { k: '卡牌', ic: '🃏', d: '牌组构筑 · 出牌计分', ori: 'portrait', ideas: ['类似小丑牌的夜市戏法卡牌', '打怪爬塔的卡牌冒险', '三国武将对战卡牌'] },
+  { k: '消除', ic: '🍬', d: '三消 · 合成 · 连连看', ori: 'portrait', ideas: ['月下花灯三消，收集订单', '合成大西瓜那样的水果合成', '海底宝石连连看'] },
+  { k: '跑酷闯关', ic: '🏃', d: '横版跳跃 · 躲障碍', ori: 'landscape', ideas: ['小狐狸森林采蘑菇，躲开刺猬', '糖果王国跳跳乐', '骑士闯城堡救公主'] },
+  { k: '射击', ic: '🎯', d: '弹幕 · 打飞机 · 生存', ori: 'portrait', ideas: ['竖版飞机大战，打 Boss', '俯视角躲僵尸生存 60 秒', '太空猫打陨石'] },
+  { k: '解谜', ic: '🧩', d: '推箱子 · 数字 · 逻辑', ori: 'portrait', ideas: ['推箱子：帮小猫把毛线球推回家', '2048 但是是中国神兽', '拼图找不同'] },
+  { k: '塔防', ic: '🏰', d: '造塔 · 守关 · 波次', ori: 'landscape', ideas: ['植物大战僵尸那样的蔬菜守菜园', '守护水晶的魔法塔防', '海盗守港口'] },
+  { k: '模拟经营', ic: '🏪', d: '开店 · 种田 · 养成', ori: 'portrait', ideas: ['经营一家深夜拉面店', '开心农场种菜卖菜', '养一只电子宠物'] },
+  { k: '自由创意', ic: '✨', d: '什么都可以试试', ori: 'portrait', ideas: ['打地鼠但地鼠会说相声', '节奏点击音游', '钓鱼小游戏'] },
+];
+function openCreate() {
+  const st = { type: null, dim: '2d', ori: 'portrait', step: 0 };
+  const m = document.createElement('div'); m.className = 'sheet-bg';
+  m.innerHTML = '<div class="sheet"><div class="sh-grip"></div><div class="sh-head"><button class="ib" id="cBack" hidden>‹</button><h3 id="cTitle"></h3><div class="dots" id="cDots"><i></i><i></i><i></i></div><button class="ib" id="cClose">✕</button></div><div class="sh-body" id="cBody"></div><div class="sh-foot" id="cFoot"></div></div>';
+  document.body.appendChild(m);
+  requestAnimationFrame(() => m.classList.add('in'));
+  const close = () => { m.classList.remove('in'); setTimeout(() => m.remove(), 250); };
+  $('#cClose', m).onclick = close; m.onclick = e => { if (e.target === m) close(); };
+  $('#cBack', m).onclick = () => { st.step--; render(); };
+  function render() {
+    $('#cBack', m).hidden = st.step === 0;
+    $$('#cDots i', m).forEach((d, i) => d.classList.toggle('on', i <= st.step));
+    const body = $('#cBody', m), foot = $('#cFoot', m);
+    if (st.step === 0) {
+      $('#cTitle', m).textContent = '想做什么类型的游戏？';
+      body.innerHTML = '<div class="types">' + TYPES.map((t, i) => '<button data-i="' + i + '"' + (st.type === t ? ' class="on"' : '') + '><span class="ti">' + t.ic + '</span><b>' + t.k + '</b><small>' + t.d + '</small></button>').join('') + '</div>';
+      foot.innerHTML = '';
+      $$('.types button', body).forEach(b => b.onclick = () => { st.type = TYPES[+b.dataset.i]; st.ori = st.type.ori; st.dim = '2d'; st.step = 1; render(); });
+    } else if (st.step === 1) {
+      $('#cTitle', m).textContent = '选择画面和屏幕';
+      body.innerHTML = '<div class="lbl">画面</div><div class="opt2" id="oDim">'
+        + '<button data-v="2d"><span class="pv pv2d"></span><b>2D</b><small>平面 · 卡通/像素</small></button>'
+        + '<button data-v="3d"><span class="pv pv3d"></span><b>3D</b><small>立体 · 低多边形</small></button></div>'
+        + '<div class="lbl">屏幕方向</div><div class="opt2" id="oOri">'
+        + '<button data-v="portrait"><span class="pv pvp"><i></i></span><b>竖屏</b><small>单手拿着玩</small></button>'
+        + '<button data-v="landscape"><span class="pv pvl"><i></i></span><b>横屏</b><small>双手横握 · 视野更宽</small></button></div>'
+        + '<div class="note" id="oNote"></div>';
+      foot.innerHTML = '<button class="btn pri big" id="cNext">下一步</button>';
+      const sync = () => {
+        if (st.dim === '3d') st.ori = 'landscape';
+        $$('#oDim button', body).forEach(b => b.classList.toggle('on', b.dataset.v === st.dim));
+        $$('#oOri button', body).forEach(b => { b.classList.toggle('on', b.dataset.v === st.ori); b.disabled = st.dim === '3d' && b.dataset.v === 'portrait'; });
+        $('#oNote', body).textContent = st.dim === '3d' ? '3D 目前只支持第三人称探索类玩法，屏幕固定为横屏' : (st.type.ori === st.ori ? '✓ ' + st.type.k + '游戏通常用' + (st.ori === 'portrait' ? '竖屏' : '横屏') : '');
+      };
+      $$('#oDim button', body).forEach(b => b.onclick = () => { st.dim = b.dataset.v; sync(); });
+      $$('#oOri button', body).forEach(b => b.onclick = () => { st.ori = b.dataset.v; sync(); });
+      sync();
+      $('#cNext', foot).onclick = () => { st.step = 2; render(); };
+    } else {
+      $('#cTitle', m).textContent = '用一句话描述你的游戏';
+      body.innerHTML = '<div class="pick-sum"><span>' + st.type.ic + ' ' + st.type.k + '</span><span>' + st.dim.toUpperCase() + '</span><span>' + (st.ori === 'portrait' ? '竖屏' : '横屏') + '</span></div>'
+        + '<textarea id="cPrompt" placeholder="主角是谁、在哪里、要做什么、怎么算赢……越具体 AI 越懂你"></textarea>'
+        + '<div class="lbl">试试这些</div><div class="ideas">' + st.type.ideas.map(t => '<button>' + esc(t) + '</button>').join('') + '</div>';
+      foot.innerHTML = '<button class="btn pri big" id="cGo">✦ 开始搭建</button>';
+      $$('.ideas button', body).forEach(b => b.onclick = () => { $('#cPrompt', body).value = b.textContent; });
+      $('#cGo', foot).onclick = () => create($('#cPrompt', body).value, st);
+      setTimeout(() => $('#cPrompt', body).focus(), 280);
+    }
+  }
+  render();
+}
+async function create(prompt, st) {
+  if (!prompt.trim()) { toast('先描述一下你想做什么游戏吧'); return; }
+  const p = await api('/projects', { body: { prompt, dimension: st.dim, orientation: st.ori, genre_hint: st.type?.k === '自由创意' ? '' : st.type?.k } });
+  location.href = '/editor.html?id=' + p.id + '&go=' + encodeURIComponent(prompt) + '&dim=' + st.dim + '&ori=' + st.ori;
+}
+$('#createBtn').onclick = openCreate;
+
+// ---------------------------------------------------------------- feed (one game per screen)
+function reelItem(g) {
+  const bg = g.cover ? 'background-image:url(' + esc(g.cover) + ')' : '';
+  return '<article class="reel-item" data-id="' + g.id + '"><div class="rbg" style="' + bg + '"></div>'
+    + '<div class="rcover' + (g.orientation === 'portrait' ? ' por' : '') + '" style="' + bg + '">' + (g.cover ? '' : '🎮') + '</div>'
+    + '<button class="rplay">▶<span>开始玩</span></button>'
+    + '<div class="rside"><button class="like" data-like>♥<span>' + g.likes + '</span></button><button data-remix>🔁<span>改编</span></button><div class="st">▶<span>' + g.plays + '</span></div></div>'
+    + '<div class="rinfo"><div class="au">@' + esc(g.author) + '</div><h2>' + esc(g.title) + '</h2><p>' + esc(g.pitch || '') + '</p><div class="tags"><span>' + (g.dimension === '3d' ? '3D' : '2D') + '</span><span>' + (g.orientation === 'portrait' ? '竖屏' : '横屏') + '</span>' + (GENRE_CN[g.genre] ? '<span>' + esc(GENRE_CN[g.genre]) + '</span>' : '') + (g.remixOf ? '<span>改编作品</span>' : '') + '</div></div></article>';
+}
+let sort = 'hot';
+async function loadFeed() {
+  const list = await api('/feed?sort=' + sort);
+  const el = $('#feed');
+  el.innerHTML = list.length ? list.map(reelItem).join('') : '<div class="reel-empty"><div>🛸</div><b>还没有已发布的游戏</b><p>点下面的 ＋，说一句话，看 AI 团队把它搭出来</p></div>';
+  el.scrollTop = 0;
+  $$('.reel-item', el).forEach(it => {
+    const id = it.dataset.id;
+    it.querySelector('.rplay').onclick = () => location.href = '/play.html?id=' + id;
+    it.querySelector('.rcover').onclick = () => location.href = '/play.html?id=' + id;
+    it.querySelector('[data-like]').onclick = async e => { const b = e.currentTarget; b.classList.add('on'); const r = await api('/games/' + id + '/like', { body: {} }); b.querySelector('span').textContent = r.likes; };
+    it.querySelector('[data-remix]').onclick = async () => { const p = await api('/projects', { body: { remix: id } }); location.href = '/editor.html?id=' + p.id; };
+  });
+}
+$$('#sortSeg button').forEach(b => b.onclick = () => { sort = b.dataset.s; $$('#sortSeg button').forEach(x => x.classList.toggle('on', x === b)); loadFeed(); });
+
+async function loadMine() {
+  const list = await api('/me');
+  const pub = list.filter(x => x.published);
+  $('#stats').innerHTML = '<div><b>' + list.length + '</b>作品</div><div><b>' + pub.length + '</b>已发布</div><div><b>' + pub.reduce((a, x) => a + (x.plays || 0), 0) + '</b>游玩</div><div><b>' + pub.reduce((a, x) => a + (x.likes || 0), 0) + '</b>获赞</div>';
+  $('#mine').innerHTML = list.length ? list.map(g => '<div class="mcard" data-id="' + g.id + '"><div class="cv' + (g.orientation === 'portrait' ? ' por' : '') + '" style="' + (g.cover ? 'background-image:url(' + esc(g.cover) + ')' : '') + '">' + (g.cover ? '' : '🛠️') + '<span class="badge">' + (g.published ? '已发布' : '草稿') + '</span></div><h3>' + esc(g.title) + '</h3></div>').join('') : '<div class="reel-empty small"><b>还没有作品</b><p>点下面的 ＋ 开始第一个游戏</p></div>';
+  $$('#mine .mcard').forEach(c => c.onclick = () => location.href = '/editor.html?id=' + c.dataset.id);
+}
+function tab(t) {
+  $$('.tabbar [data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  $('#feedView').hidden = t !== 'feed'; $('#meView').hidden = t !== 'me';
+  document.body.classList.toggle('on-feed', t === 'feed');
+  if (t === 'feed') loadFeed(); else loadMine();
+  history.replaceState(null, '', t === 'me' ? '#me' : '#');
+}
+$$('.tabbar [data-tab]').forEach(b => b.onclick = () => tab(b.dataset.tab));
+tab(location.hash === '#me' ? 'me' : 'feed');
+if (location.hash === '#create') openCreate();
+</script></body></html>

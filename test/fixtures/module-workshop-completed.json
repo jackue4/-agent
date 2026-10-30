@@ -1,0 +1,264 @@
+{
+  "capturedFrom": "90a9e61ff8 completed source-only acceptance snapshot; source content omitted",
+  "actualFiles": [
+    "card_view.gd",
+    "echo_joker.gd",
+    "jokers.gd",
+    "main.gd",
+    "main.tscn",
+    "rules.gd"
+  ],
+  "project": {
+    "build": {
+      "buildId": "b75bb0379efbe2a0855d23bce908df78",
+      "sourceRevision": "e5be14d7ea5a5858e266802b9d15f32057a594cad4f20220ebe1d7fe8c658e7b",
+      "contentHash": "a47e55405c09a8ea60e147dd87f29e1bb5e386926b3299b2f488bd02ef64057f",
+      "version": 11,
+      "bytes": 2145720
+    },
+    "sceneDirty": false,
+    "game": {
+      "meta": {
+        "engine": "godot"
+      },
+      "design": {
+        "modules": [
+          {
+            "file": "rules.gd",
+            "owner": "gameplay",
+            "role": "原牌型与计分",
+            "interface": "复用现有静态规则接口；只读，不修改。"
+          },
+          {
+            "file": "jokers.gd",
+            "owner": "gameplay",
+            "role": "原小丑定义",
+            "interface": "复用现有小丑数据；只读，不修改。"
+          },
+          {
+            "file": "echo_joker.gd",
+            "owner": "gameplay",
+            "role": "回声倍率模块",
+            "interface": "输入牌型或评估结果，输出是否触发、倍率增量和原因；含确定性验证。"
+          },
+          {
+            "file": "card_view.gd",
+            "owner": "scene",
+            "role": "纸牌交互组件",
+            "interface": "输入牌数据与选中状态，输出 card_clicked 信号；负责牌面和抬升动画。"
+          },
+          {
+            "file": "main.gd",
+            "owner": "scene",
+            "role": "主流程与商店",
+            "interface": "整合规则、牌面、计分、回合、商店、结算、声音和自动测试。"
+          },
+          {
+            "file": "main.tscn",
+            "owner": "scene",
+            "role": "牌桌场景入口",
+            "interface": "挂载主流程并承载统一视觉场景。"
+          }
+        ]
+      },
+      "code": {
+        "files": {}
+      }
+    },
+    "workflow": {
+      "id": "91f9421f-2e81-4c0a-9ba8-cd6496a62fe2",
+      "status": "completed",
+      "sourceRevision": "e5be14d7ea5a5858e266802b9d15f32057a594cad4f20220ebe1d7fe8c658e7b",
+      "baseRevision": "1f726121b19faa0473d02cc2dbeade8c85235312ed25b86fca5f738f90f3b545",
+      "iteration": {
+        "kind": "iteration",
+        "phase": "review"
+      },
+      "issues": [],
+      "tasks": [],
+      "evidence": [
+        {
+          "id": "ef5eb071-6747-4263-8587-e7c8b74d98ff",
+          "kind": "compile",
+          "ok": true,
+          "sourceRevision": "e5be14d7ea5a5858e266802b9d15f32057a594cad4f20220ebe1d7fe8c658e7b"
+        },
+        {
+          "id": "be5667ce-1344-4fc9-9da5-523ed20a4458",
+          "kind": "build",
+          "ok": true,
+          "sourceRevision": "e5be14d7ea5a5858e266802b9d15f32057a594cad4f20220ebe1d7fe8c658e7b",
+          "buildId": "b75bb0379efbe2a0855d23bce908df78"
+        },
+        {
+          "id": "f222930c-1ffe-466b-9f2a-0f68f207400b",
+          "kind": "test",
+          "ok": true,
+          "sourceRevision": "e5be14d7ea5a5858e266802b9d15f32057a594cad4f20220ebe1d7fe8c658e7b",
+          "checks": [
+            {
+              "ok": true,
+              "what": "回声模块固定牌组验证"
+            },
+            {
+              "ok": true,
+              "what": "开局补满8张手牌"
+            },
+            {
+              "ok": true,
+              "what": "真实点击选择纸牌"
+            },
+            {
+              "ok": true,
+              "what": "选牌上限为5"
+            },
+            {
+              "ok": true,
+              "what": "再次点击取消选择"
+            },
+            {
+              "ok": true,
+              "what": "对子18筹码乘8倍率且采用回声模块原因"
+            },
+            {
+              "ok": true,
+              "what": "非对子不触发回声且计分正确"
+            },
+            {
+              "ok": true,
+              "what": "计分花色使用中文文本"
+            },
+            {
+              "ok": true,
+              "what": "真实出牌后保留回声结算说明"
+            },
+            {
+              "ok": true,
+              "what": "选新牌时结算与预览分区保留"
+            },
+            {
+              "ok": true,
+              "what": "弃牌后仍保留上一手回声结算"
+            },
+            {
+              "ok": true,
+              "what": "四条自然达标进入商店并获得4资金"
+            },
+            {
+              "ok": true,
+              "what": "胜利结算后HUD同步分数余额和次数"
+            },
+            {
+              "ok": true,
+              "what": "结算区保留回声触发原因"
+            },
+            {
+              "ok": true,
+              "what": "两次购买回声正确扣款"
+            },
+            {
+              "ok": true,
+              "what": "余额不足禁止购买"
+            },
+            {
+              "ok": true,
+              "what": "购买普通小丑资金守恒"
+            },
+            {
+              "ok": true,
+              "what": "出售末位小丑正确回款"
+            },
+            {
+              "ok": true,
+              "what": "继续下一局提升目标"
+            },
+            {
+              "ok": true,
+              "what": "商店全屏遮罩已完整释放"
+            },
+            {
+              "ok": true,
+              "what": "商店下一局后牌面仍可真实点击"
+            },
+            {
+              "ok": true,
+              "what": "弃牌前真实选择两张牌"
+            },
+            {
+              "ok": true,
+              "what": "弃牌扣次并补满手牌"
+            },
+            {
+              "ok": true,
+              "what": "出牌次数耗尽且未达标则失败，HUD同步最终状态"
+            },
+            {
+              "ok": true,
+              "what": "失败后重开恢复初始状态"
+            },
+            {
+              "ok": true,
+              "what": "失败弹层全屏遮罩已完整释放"
+            },
+            {
+              "ok": true,
+              "what": "失败重开后牌面仍可真实点击"
+            }
+          ]
+        },
+        {
+          "id": "7eb69308-bd54-4e2e-8234-254f894b8688",
+          "kind": "build",
+          "ok": true,
+          "sourceRevision": "e5be14d7ea5a5858e266802b9d15f32057a594cad4f20220ebe1d7fe8c658e7b",
+          "buildId": "b75bb0379efbe2a0855d23bce908df78"
+        },
+        {
+          "id": "0fcb5371-eccf-40e9-8c99-2b7b03320379",
+          "kind": "play",
+          "ok": true,
+          "sourceRevision": "e5be14d7ea5a5858e266802b9d15f32057a594cad4f20220ebe1d7fe8c658e7b"
+        },
+        {
+          "id": "b33ab837-bcae-4eb2-8b91-04f803d1d420",
+          "kind": "preview",
+          "ok": true,
+          "sourceRevision": "e5be14d7ea5a5858e266802b9d15f32057a594cad4f20220ebe1d7fe8c658e7b",
+          "buildId": "b75bb0379efbe2a0855d23bce908df78"
+        }
+      ],
+      "activity": [
+        {
+          "kind": "file",
+          "file": "main.gd",
+          "status": "saved",
+          "sourceRevision": "f6cd5a5b809bdbad0664faa8028f89b3384f14209857e22fbe0f647b77027d2e"
+        },
+        {
+          "kind": "file",
+          "file": "main.gd",
+          "status": "saved",
+          "sourceRevision": "fecd6a5d087a64a22e2222806f0c010ce05ac69ee60f22236058a2c4c4a55eaa"
+        },
+        {
+          "kind": "file",
+          "file": "main.gd",
+          "status": "saved",
+          "sourceRevision": "8636cd5dbba9263845857a3058a80e9770b9b78f89534b7059ac074f403f984c"
+        },
+        {
+          "kind": "file",
+          "file": "main.gd",
+          "status": "saved",
+          "sourceRevision": "6f3e2585b24a9ace6f102e4d278921e74058a40d9907325dfa4711279d1d6267"
+        },
+        {
+          "kind": "file",
+          "file": "main.gd",
+          "status": "saved",
+          "sourceRevision": "e5be14d7ea5a5858e266802b9d15f32057a594cad4f20220ebe1d7fe8c658e7b"
+        }
+      ]
+    }
+  }
+}

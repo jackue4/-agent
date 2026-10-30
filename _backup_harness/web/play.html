@@ -1,0 +1,65 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>造梦 · 游戏</title><link rel="stylesheet" href="/app.css">
+<style>
+html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#000}
+.pl{position:relative;height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.pbg{position:absolute;inset:-40px;background:#1b1440 center/cover;filter:blur(30px) brightness(.35)}
+.pstage{position:relative;width:var(--w,100vw);height:var(--h,56vw);background:#000;overflow:hidden;box-shadow:0 0 60px #000}
+.pstage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.loading{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:12px;background:#0f0b1e;color:var(--dim)}
+.spin{width:38px;height:38px;border-radius:50%;border:3px solid #ffffff20;border-top-color:var(--pri);animation:sp .8s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.ptop{position:absolute;z-index:3;left:0;right:0;top:0;display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top) + 8px) 10px 8px;background:linear-gradient(#000b,#0000);transition:opacity .3s}
+.ptop h1{flex:1;min-width:0;margin:0;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px #000}
+.ib{flex:none;width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:#0007;backdrop-filter:blur(6px);font-size:18px}
+.ib.back{font-size:28px;padding-bottom:3px}
+.pbar{position:absolute;z-index:3;left:0;right:0;bottom:0;padding:10px 12px calc(env(safe-area-inset-bottom) + 12px);display:flex;gap:8px;align-items:center;background:linear-gradient(#0000,#000c);transition:opacity .3s}
+.pbar .info{flex:1;min-width:0;font-size:12px;color:#e5defa}
+.pbar .info b{display:block;font-size:13px;color:#fff}
+.pbar .info span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.8}
+.pbar .btn{padding:8px 13px;font-size:13px}
+body.immersive .ptop,body.immersive .pbar{opacity:0;pointer-events:none}
+/* landscape game held upright: offer to rotate */
+.rot{position:absolute;z-index:4;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 76px);padding:7px 14px;border-radius:999px;background:#0009;border:1px solid #ffffff22;font-size:12.5px;color:#e5defa;white-space:nowrap;backdrop-filter:blur(6px)}
+</style></head><body>
+<div class="pl">
+  <div class="pbg" id="pbg"></div>
+  <div class="ptop"><a class="ib back" href="/" aria-label="返回">‹</a><h1 id="t">…</h1><button class="ib" id="restart" aria-label="重新开始">↻</button><button class="ib" id="fs" aria-label="全屏">⛶</button></div>
+  <div class="pstage" id="stage"><iframe id="rt" src="/game/index.html" allow="autoplay; fullscreen"></iframe><div class="loading" id="ld"><div class="spin"></div><div>加载中…</div></div></div>
+  <div class="rot" id="rot" hidden>↻ 横过手机玩，画面更大</div>
+  <div class="pbar"><div class="info"><b id="au"></b><span id="pitch"></span></div><button class="btn" id="like">♥ <span id="likes">0</span></button><button class="btn pri" id="remix">🔁 改编</button></div>
+</div>
+<script type="module">
+import { $, api, Runtime } from '/common.js';
+const id = new URLSearchParams(location.search).get('id');
+let g = null, counted = false;
+const rt = new Runtime($('#rt'), ev => { if (ev.type === 'ready') { $('#ld').hidden = true; if (g) start(); } });
+function start(card = true) { rt.send({ type: 'load', spec: g.spec, assets: g.assets, mode: 'play', start_card: card }); setTimeout(() => rt.focus(), 200); if (!counted) { counted = true; api('/games/' + id + '/play', { body: {} }); } }
+const por = () => g?.orientation === 'portrait';
+/** Largest frame with the game's aspect that fits the screen (letterboxed over a blurred cover). */
+function fit() {
+  const W = innerWidth, H = innerHeight, r = por() ? 9 / 16 : 16 / 9;
+  let w = W, h = W / r; if (h > H) { h = H; w = H * r; }
+  // a portrait screen narrower than the game's aspect: let the game fill it (stretch mode expands)
+  if (por() && W / H < r) { w = W; h = H; }
+  $('#stage').style.setProperty('--w', Math.floor(w) + 'px'); $('#stage').style.setProperty('--h', Math.floor(h) + 'px');
+  $('#rot').hidden = por() || W > H || !matchMedia('(pointer:coarse)').matches;
+  document.body.classList.toggle('immersive', !por() && W > H && H < 520);
+}
+addEventListener('resize', fit);
+(async () => {
+  g = await api('/games/' + id);
+  document.title = g.title + ' · 造梦';
+  $('#t').textContent = g.title; $('#pitch').textContent = g.pitch || '';
+  $('#au').textContent = '@' + (g.author || '造梦玩家') + ' · ▶ ' + g.plays;
+  $('#likes').textContent = g.likes;
+  if (g.cover) $('#pbg').style.backgroundImage = 'url(' + g.cover + ')';
+  fit();
+  if (rt.ready) start();
+})();
+$('#restart').onclick = () => start(false);
+$('#like').onclick = async () => { const r = await api('/games/' + id + '/like', { body: {} }); $('#likes').textContent = r.likes; };
+$('#fs').onclick = async () => { try { await document.documentElement.requestFullscreen?.(); await screen.orientation?.lock?.(por() ? 'portrait' : 'landscape'); } catch {} fit(); rt.focus(); };
+$('#remix').onclick = async () => { const p = await api('/projects', { body: { remix: id } }); location.href = '/editor.html?id=' + p.id; };
+</script></body></html>

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+  <meta name="theme-color" content="#101116">
+  <title>造梦 · 创作中</title>
+  <link rel="stylesheet" href="/app.css">
+  <link rel="stylesheet" href="/editor.css">
+</head>
+<body class="ed">
+<div class="app" id="app">
+  <header class="etop">
+    <a class="ib back" href="/" aria-label="返回"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg></a>
+    <input id="title" class="title-in" value="未命名游戏" maxlength="40" aria-label="游戏名称">
+    <div class="seg" id="modeSeg" aria-label="创作模式">
+      <button data-m="edit" class="on" aria-pressed="true">编辑</button>
+      <button data-m="play" aria-pressed="false">试玩</button>
+    </div>
+    <button class="ib" id="moreBtn" aria-label="更多选项" aria-expanded="false" aria-controls="moreMenu"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+  </header>
+  <div class="menu" id="moreMenu" hidden aria-label="作品选项">
+    <button id="pubBtn">发布游戏</button>
+    <button id="verBtn">版本历史</button>
+    <button id="frameBtn">显示全部</button>
+    <button id="muteBtn">关闭声音</button>
+    <button id="fsBtn">全屏预览</button>
+    <button id="retryAssetsBtn" hidden>重试失败素材</button>
+  </div>
+  <main class="stage" id="stage" aria-label="游戏场景">
+    <div class="stage-frame" id="frameWrap">
+      <iframe id="rt" title="游戏预览" src="/game/index.html" allow="autoplay; fullscreen" tabindex="0"></iframe>
+      <div class="loading" id="rtLoading" role="status"><div class="spin"></div><span>正在打开场景…</span></div>
+    </div>
+    <aside class="feed" id="feed" hidden role="dialog" aria-label="对话记录">
+      <div class="chat-head">
+        <h2>对话</h2>
+        <button class="ib" id="chatClose" aria-label="关闭对话"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </div>
+      <p class="chat-empty" id="chatEmpty">说说你的想法，一起把游戏做好。</p>
+      <div class="msgs" id="msgs" tabindex="0" aria-label="聊天消息"></div>
+    </aside>
+  </main>
+  <footer class="composer" id="composer">
+    <div class="sel-chip" id="selChip" hidden></div>
+    <div class="cbar">
+      <button class="ib chat-toggle" id="chatBtn" aria-label="打开对话记录" aria-controls="feed" aria-expanded="false" title="对话记录"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H8l-4 2V11.5A7.5 7.5 0 0 1 11.5 4h1a7.5 7.5 0 0 1 7.5 7.5Z"/><path d="M8 10h8M8 14h5"/></svg></button>
+      <textarea id="input" rows="1" enterkeyhint="send" aria-label="描述你想修改的内容" placeholder="说说你想怎么改…"></textarea>
+      <button class="send stop" id="stopBtn" hidden aria-label="停止搭建" title="停止搭建"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2"/></svg></button>
+      <button class="send" id="sendBtn" aria-label="发送" title="发送"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 18V6m-5 5 5-5 5 5"/></svg></button>
+    </div>
+  </footer>
+</div>
+<script type="module" src="/editor.js"></script>
+</body>
+</html>

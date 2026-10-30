@@ -1,0 +1,21 @@
+# dependencies
+node_modules/
+
+# Godot import cache
+.godot/
+
+# local runtime data: projects, covers, generated packs
+data/
+
+# generated evidence, videos, and scratch builds
+artifacts/
+
+# downloaded binaries; the Godot editor exe is over GitHub's 100MB file limit
+tools/godot/*.exe
+tools/cloudflared/*.exe
+
+# logs and OS junk
+*.log
+*.pid
+Thumbs.db
+.DS_Store

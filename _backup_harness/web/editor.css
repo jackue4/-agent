@@ -1,0 +1,94 @@
+/* The scene owns the screen. Conversation is an optional overlay. */
+html,body.ed{height:100%;overflow:hidden;overscroll-behavior:none}
+body.ed{--bg:#101116;--panel:#191b23;--panel2:#232530;--line:#ffffff14;--text:#f1f1f5;--dim:#999ba9;background:var(--bg)}
+.app{position:relative;width:100%;height:var(--appH,100dvh);margin:0;display:flex;flex-direction:column;background:var(--bg);overflow:hidden}
+.etop{flex:none;display:flex;align-items:center;gap:10px;min-height:56px;padding:calc(env(safe-area-inset-top) + 8px) max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left));z-index:6}
+.ib{flex:none;display:grid;place-items:center;width:38px;height:38px;padding:9px;border-radius:10px;background:transparent;color:var(--dim);transition:color .15s,background .15s}
+.ib:hover,.ib[aria-expanded=true]{color:var(--text);background:#ffffff09}
+svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.title-in{flex:1;min-width:0;width:0;border:0;border-radius:6px;padding:6px 2px;background:transparent;font-size:14px;font-weight:500;text-overflow:ellipsis;outline:none}
+.title-in:focus{background:#ffffff06}
+.etop .seg{flex:none;border:0;background:#ffffff06;padding:3px;border-radius:10px}
+.etop .seg button{min-height:32px;padding:5px 15px;border-radius:7px;font-size:12px;color:var(--dim)}
+.etop .seg button.on{background:#ffffff12;color:var(--text)}
+.menu{position:absolute;right:max(12px,env(safe-area-inset-right));top:calc(env(safe-area-inset-top) + 54px);z-index:20;display:flex;flex-direction:column;min-width:168px;padding:6px;border:1px solid var(--line);border-radius:13px;background:#20222bf5;backdrop-filter:blur(18px);box-shadow:0 12px 36px #0005}
+.menu button{text-align:left;padding:11px 12px;border-radius:8px;font-size:13px}
+.menu button:hover{background:#ffffff09}
+.menu #pubBtn{color:#c6b5ff;border-bottom:1px solid var(--line);border-radius:8px 8px 0 0;margin-bottom:3px}
+.stage{position:relative;flex:1;min-width:0;min-height:0;display:flex;justify-content:center;align-items:center;overflow:hidden;padding:0}
+.stage-frame{position:relative;flex:none;width:var(--frameW,100%);height:var(--frameH,100%);overflow:hidden;background:#101116;border-radius:10px}
+.stage-frame iframe{display:block;position:absolute;inset:0;width:100%;height:100%;border:0}
+.stage-frame:fullscreen{width:100vw!important;height:100dvh!important;border-radius:0}
+.loading{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:16px;background:var(--bg);color:var(--dim);font-size:13px}
+.spin{width:24px;height:24px;border:2px solid #ffffff12;border-top-color:#b5a6e8;border-radius:50%;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* The drawer never resizes or remounts the game. */
+.feed{position:absolute;right:max(12px,env(safe-area-inset-right));top:8px;bottom:8px;width:min(360px,calc(100% - 24px));z-index:8;display:flex;flex-direction:column;overflow:hidden;background:#191b23f5;border:1px solid #ffffff12;border-radius:16px;backdrop-filter:blur(24px);box-shadow:0 16px 50px #0005;animation:drawer .2s ease-out}
+@keyframes drawer{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}
+.chat-head{flex:none;display:flex;align-items:center;justify-content:space-between;padding:10px 12px 10px 18px;border-bottom:1px solid var(--line)}
+.chat-head h2{font-size:14px;font-weight:500;margin:0}
+.chat-head .ib{width:32px;height:32px;padding:7px}
+.chat-empty{margin:auto 26px;color:var(--dim);font-size:13px;line-height:1.8;text-align:center}
+.chat-empty:not([hidden])+.msgs:empty{flex:0}
+.msgs{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:20px 16px 8px;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#ffffff20 transparent}
+.msg{margin-bottom:20px;font-size:13px;line-height:1.8;overflow-wrap:anywhere}
+.msg.user{display:flex;justify-content:flex-end}
+.msg.user div{max-width:90%;white-space:pre-wrap;background:#a78bfa18;border:1px solid #a78bfa20;padding:9px 13px;border-radius:13px 13px 3px 13px;color:#e5dcff}
+.msg.ai{display:block;color:#d4d5df}
+.msg.ai .av{display:none}
+.msg.ai .tx{white-space:pre-wrap}
+.msg.ai .tx::before{display:none}
+.msg.ai b{color:var(--text)}
+.msg.ai code{font:12px ui-monospace,Consolas,monospace;background:#ffffff09;border-radius:4px;padding:1px 4px}
+.cursor::after{content:'·';margin-left:3px;color:#b9a5f5;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.sugg{display:flex;flex-direction:column;gap:7px;margin:0 0 20px}
+.sugg button{text-align:left;padding:9px 12px;border:1px solid var(--line);border-radius:10px;color:#b6aecb;background:transparent;font-size:12px;line-height:1.6}
+.sugg button:hover{background:#ffffff05;color:var(--text)}
+.err{margin:12px 0 20px;padding:10px 12px;border-radius:10px;background:#f8717110;color:#f5aaa7;font-size:12px;line-height:1.7;overflow-wrap:anywhere}
+
+/* Only the compact input remains below the scene. */
+.composer{flex:none;width:min(600px,100%);align-self:center;z-index:9;padding:10px max(12px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+.cbar{display:flex;align-items:flex-end;gap:6px;border:1px solid #ffffff16;border-radius:16px;padding:5px;background:#1b1d25;transition:border-color .15s}
+.cbar:focus-within{border-color:#b5a6e866}
+.chat-toggle{position:relative;width:36px;height:36px;padding:8px}
+.chat-toggle[data-unread=true]::after{content:'';position:absolute;top:6px;right:5px;width:5px;height:5px;border-radius:50%;background:#bba6ff;box-shadow:0 0 0 2px #1b1d25}
+.cbar textarea{flex:1;min-width:0;resize:none;background:transparent;border:0;outline:0;padding:8px 2px;line-height:20px;max-height:96px;font-size:14px;scrollbar-width:thin}
+.cbar textarea::placeholder{color:#7d7f8e}
+.send{display:grid;place-items:center;flex:none;width:36px;height:36px;padding:8px;border-radius:11px;background:#c5b3f3;color:#282038;transition:background .15s}
+.send:hover{background:#d6c6ff}
+.send:disabled{background:#ffffff08;color:#626474;cursor:default}
+.send.stop{background:#ffffff0d;color:#c8c8d3}
+.stop svg rect{fill:currentColor;stroke:none}
+.sel-chip{display:flex;align-items:center;gap:8px;margin:0 0 6px;padding:5px 10px;color:#b7accb;font-size:12px}
+.sel-chip button{margin-left:auto;color:var(--dim)}
+body.playing .composer,body.playing .feed{display:none!important}
+body.playing .stage{margin-bottom:env(safe-area-inset-bottom)}
+button:focus-visible,a:focus-visible,input:focus-visible,.msgs:focus-visible{outline:2px solid #b5a6e8;outline-offset:2px}
+.cbar textarea:focus-visible{outline:none}
+
+/* Existing project actions remain available from the compact menu. */
+.hint{color:var(--dim);font-size:12px}
+.ver-list{max-height:50vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.ver-list button{display:flex;gap:10px;align-items:center;text-align:left;padding:10px 12px;border-radius:10px;background:#ffffff05;border:1px solid var(--line)}
+.ver-list b{color:#c5b3f3;width:36px;flex:none}
+.pub-cover{aspect-ratio:16/9;border-radius:12px;background:#000 center/cover;margin-bottom:14px;border:1px solid var(--line)}
+.check{padding:10px 12px;border-radius:10px;font-size:13px;line-height:1.6}.check.bad{color:#f5aaa7;background:#f8717110;border:1px solid #f8717130}
+.modal{background:#1b1d25}.field input,.field textarea{background:#13151b}
+.btn.pri{background:#bba5ef;color:#211c2f;box-shadow:none}.btn.pri:hover{box-shadow:none}
+@media(max-width:600px){
+  .etop{gap:6px;min-height:50px;padding-top:calc(env(safe-area-inset-top) + 5px);padding-bottom:5px}
+  .etop .seg button{padding:4px 11px}
+  .stage-frame{border-radius:6px}
+  .composer{padding-top:7px;padding-bottom:calc(7px + env(safe-area-inset-bottom))}
+  .cbar textarea{font-size:16px}
+  .feed{right:max(8px,env(safe-area-inset-right));top:4px;bottom:4px;width:min(340px,calc(100% - 16px))}
+  .modal-bg{align-items:end}.modal{width:100%;max-width:none;border-radius:18px 18px 0 0;padding:20px 18px calc(env(safe-area-inset-bottom) + 18px)}
+}
+@media(orientation:landscape) and (max-height:520px){
+  .etop{min-height:44px;padding-top:env(safe-area-inset-top);padding-bottom:0}
+  .composer{width:min(520px,100%);padding-top:5px;padding-bottom:calc(5px + env(safe-area-inset-bottom))}
+  .feed{top:2px;bottom:2px;width:min(340px,48%)}
+}
+@media(prefers-reduced-motion:reduce){.feed{animation:none}.spin{animation-duration:2s}.cursor::after{animation:none}*{scroll-behavior:auto!important}}

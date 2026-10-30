@@ -1,0 +1,678 @@
+﻿{
+    "spec":  {
+                 "meta":  {
+                              "title":  "企鹅跳跳岛",
+                              "dimension":  "3d",
+                              "genre":  "platformer",
+                              "style":  "cartoon",
+                              "filter":  "smooth",
+                              "pitch":  "小企鹅在天空浮岛间跳跃，收集宝石、踩倒雪球怪，最终登上最高岛夺取金色王冠！"
+                          },
+                 "world":  {
+                               "sky_color":  "#87CEEB",
+                               "horizon_color":  "#B0E2FF",
+                               "ground_color":  "#a8d8f0",
+                               "ground_size":  0,
+                               "light":  "sunny",
+                               "music_asset":  "bgm_sky"
+                           },
+                 "rules":  {
+                               "win":  "goal",
+                               "lives":  3,
+                               "instructions":  "跳跃穿越浮岛，收集宝石，踩倒雪球怪，登顶拿王冠！",
+                               "time_limit":  0,
+                               "win_text":  "🎉 企鹅大冒险成功！你拿到了金色王冠！",
+                               "lose_text":  "💀 掉下去啦！勇敢的企鹅，再试一次吧！"
+                           },
+                 "settings":  {
+                                  "gravity":  24
+                              },
+                 "player":  {
+                                "position":  [
+                                                 0,
+                                                 1.4,
+                                                 0
+                                             ],
+                                "color":  "#1a1a2e",
+                                "kind":  "player",
+                                "size":  [
+                                             0.8,
+                                             1.2,
+                                             0.8
+                                         ],
+                                "air_jumps":  0,
+                                "gravity":  24,
+                                "jump":  9,
+                                "name":  "小企鹅",
+                                "speed":  7,
+                                "asset":  "penguin_model"
+                            },
+                 "entities":  {
+                                  "island_start":  {
+                                                       "id":  "island_start",
+                                                       "kind":  "platform",
+                                                       "name":  "出发大岛",
+                                                       "position":  [
+                                                                        0,
+                                                                        0,
+                                                                        0
+                                                                    ],
+                                                       "size":  [
+                                                                    8,
+                                                                    1,
+                                                                    8
+                                                                ],
+                                                       "color":  "#7EC850",
+                                                       "solid":  true,
+                                                       "asset":  "island_tex"
+                                                   },
+                                  "island_1":  {
+                                                   "id":  "island_1",
+                                                   "kind":  "platform",
+                                                   "name":  "浮岛1",
+                                                   "position":  [
+                                                                    7,
+                                                                    2,
+                                                                    2
+                                                                ],
+                                                   "size":  [
+                                                                5,
+                                                                1,
+                                                                5
+                                                            ],
+                                                   "color":  "#7EC850",
+                                                   "solid":  true,
+                                                   "asset":  "island_tex"
+                                               },
+                                  "island_2":  {
+                                                   "id":  "island_2",
+                                                   "kind":  "platform",
+                                                   "name":  "浮岛2",
+                                                   "position":  [
+                                                                    13,
+                                                                    4,
+                                                                    -3
+                                                                ],
+                                                   "size":  [
+                                                                4,
+                                                                1,
+                                                                4
+                                                            ],
+                                                   "color":  "#88D45A",
+                                                   "solid":  true,
+                                                   "asset":  "island_tex"
+                                               },
+                                  "island_3":  {
+                                                   "id":  "island_3",
+                                                   "kind":  "platform",
+                                                   "name":  "浮岛3",
+                                                   "position":  [
+                                                                    18,
+                                                                    6,
+                                                                    3
+                                                                ],
+                                                   "size":  [
+                                                                5,
+                                                                1,
+                                                                5
+                                                            ],
+                                                   "color":  "#7EC850",
+                                                   "solid":  true,
+                                                   "asset":  "island_tex"
+                                               },
+                                  "island_4":  {
+                                                   "id":  "island_4",
+                                                   "kind":  "platform",
+                                                   "name":  "浮岛4",
+                                                   "position":  [
+                                                                    24,
+                                                                    9,
+                                                                    -2
+                                                                ],
+                                                   "size":  [
+                                                                4,
+                                                                1,
+                                                                4
+                                                            ],
+                                                   "color":  "#88D45A",
+                                                   "solid":  true,
+                                                   "asset":  "island_tex"
+                                               },
+                                  "island_5":  {
+                                                   "id":  "island_5",
+                                                   "kind":  "platform",
+                                                   "name":  "浮岛5",
+                                                   "position":  [
+                                                                    30,
+                                                                    12,
+                                                                    2
+                                                                ],
+                                                   "size":  [
+                                                                5,
+                                                                1,
+                                                                5
+                                                            ],
+                                                   "color":  "#7EC850",
+                                                   "solid":  true,
+                                                   "asset":  "island_tex"
+                                               },
+                                  "island_move":  {
+                                                      "id":  "island_move",
+                                                      "kind":  "platform",
+                                                      "name":  "移动浮岛",
+                                                      "position":  [
+                                                                       36,
+                                                                       14,
+                                                                       -1
+                                                                   ],
+                                                      "size":  [
+                                                                   3,
+                                                                   1,
+                                                                   3
+                                                               ],
+                                                      "color":  "#A0E87A",
+                                                      "solid":  true,
+                                                      "behavior":  {
+                                                                       "type":  "patrol",
+                                                                       "axis":  "x",
+                                                                       "range":  3,
+                                                                       "speed":  2
+                                                                   },
+                                                      "asset":  "island_tex"
+                                                  },
+                                  "island_6":  {
+                                                   "id":  "island_6",
+                                                   "kind":  "platform",
+                                                   "name":  "浮岛6",
+                                                   "position":  [
+                                                                    42,
+                                                                    17,
+                                                                    1
+                                                                ],
+                                                   "size":  [
+                                                                4,
+                                                                1,
+                                                                4
+                                                            ],
+                                                   "color":  "#88D45A",
+                                                   "solid":  true,
+                                                   "asset":  "island_tex"
+                                               },
+                                  "island_top":  {
+                                                     "id":  "island_top",
+                                                     "kind":  "platform",
+                                                     "name":  "顶峰王冠岛",
+                                                     "position":  [
+                                                                      48,
+                                                                      21,
+                                                                      0
+                                                                  ],
+                                                     "size":  [
+                                                                  7,
+                                                                  1.5,
+                                                                  7
+                                                              ],
+                                                     "color":  "#F5E650",
+                                                     "solid":  true,
+                                                     "asset":  "island_tex"
+                                                 },
+                                  "gem_1":  {
+                                                "color":  "#44CFFF",
+                                                "id":  "gem_1",
+                                                "kind":  "collectible",
+                                                "name":  "蓝宝石",
+                                                "position":  [
+                                                                 7,
+                                                                 3.3,
+                                                                 2
+                                                             ],
+                                                "shape":  "gem",
+                                                "size":  [
+                                                             0.5,
+                                                             0.5,
+                                                             0.5
+                                                         ],
+                                                "value":  10,
+                                                "asset":  "gem_sprite"
+                                            },
+                                  "gem_2":  {
+                                                "color":  "#44CFFF",
+                                                "id":  "gem_2",
+                                                "kind":  "collectible",
+                                                "name":  "蓝宝石",
+                                                "position":  [
+                                                                 13,
+                                                                 5.3,
+                                                                 -3
+                                                             ],
+                                                "shape":  "gem",
+                                                "size":  [
+                                                             0.5,
+                                                             0.5,
+                                                             0.5
+                                                         ],
+                                                "value":  10,
+                                                "asset":  "gem_sprite"
+                                            },
+                                  "gem_3":  {
+                                                "color":  "#FF88EE",
+                                                "id":  "gem_3",
+                                                "kind":  "collectible",
+                                                "name":  "粉宝石",
+                                                "position":  [
+                                                                 18,
+                                                                 7.3,
+                                                                 3
+                                                             ],
+                                                "shape":  "gem",
+                                                "size":  [
+                                                             0.5,
+                                                             0.5,
+                                                             0.5
+                                                         ],
+                                                "value":  15,
+                                                "asset":  "gem_sprite"
+                                            },
+                                  "gem_4":  {
+                                                "color":  "#44CFFF",
+                                                "id":  "gem_4",
+                                                "kind":  "collectible",
+                                                "name":  "蓝宝石",
+                                                "position":  [
+                                                                 24,
+                                                                 10.3,
+                                                                 -2
+                                                             ],
+                                                "shape":  "gem",
+                                                "size":  [
+                                                             0.5,
+                                                             0.5,
+                                                             0.5
+                                                         ],
+                                                "value":  10,
+                                                "asset":  "gem_sprite"
+                                            },
+                                  "gem_5":  {
+                                                "color":  "#FF88EE",
+                                                "id":  "gem_5",
+                                                "kind":  "collectible",
+                                                "name":  "粉宝石",
+                                                "position":  [
+                                                                 30,
+                                                                 13.3,
+                                                                 1
+                                                             ],
+                                                "shape":  "gem",
+                                                "size":  [
+                                                             0.5,
+                                                             0.5,
+                                                             0.5
+                                                         ],
+                                                "value":  15,
+                                                "asset":  "gem_sprite"
+                                            },
+                                  "gem_6":  {
+                                                "color":  "#FFD700",
+                                                "id":  "gem_6",
+                                                "kind":  "collectible",
+                                                "name":  "金宝石",
+                                                "position":  [
+                                                                 36,
+                                                                 15.5,
+                                                                 -1
+                                                             ],
+                                                "shape":  "gem",
+                                                "size":  [
+                                                             0.6,
+                                                             0.6,
+                                                             0.6
+                                                         ],
+                                                "value":  25,
+                                                "asset":  "gem_sprite"
+                                            },
+                                  "gem_7":  {
+                                                "color":  "#44CFFF",
+                                                "id":  "gem_7",
+                                                "kind":  "collectible",
+                                                "name":  "蓝宝石",
+                                                "position":  [
+                                                                 42,
+                                                                 18.3,
+                                                                 1
+                                                             ],
+                                                "shape":  "gem",
+                                                "size":  [
+                                                             0.5,
+                                                             0.5,
+                                                             0.5
+                                                         ],
+                                                "value":  10,
+                                                "asset":  "gem_sprite"
+                                            },
+                                  "gem_8":  {
+                                                "color":  "#FFD700",
+                                                "id":  "gem_8",
+                                                "kind":  "collectible",
+                                                "name":  "金宝石",
+                                                "position":  [
+                                                                 48,
+                                                                 22.5,
+                                                                 2
+                                                             ],
+                                                "shape":  "gem",
+                                                "size":  [
+                                                             0.6,
+                                                             0.6,
+                                                             0.6
+                                                         ],
+                                                "value":  25,
+                                                "asset":  "gem_sprite"
+                                            },
+                                  "snowball_a":  {
+                                                     "behavior":  {
+                                                                      "axis":  "x",
+                                                                      "range":  2.5,
+                                                                      "speed":  2,
+                                                                      "type":  "patrol"
+                                                                  },
+                                                     "color":  "#DDEEFF",
+                                                     "id":  "snowball_a",
+                                                     "kind":  "enemy",
+                                                     "name":  "雪球怪",
+                                                     "position":  [
+                                                                      13,
+                                                                      5.3,
+                                                                      -3
+                                                                  ],
+                                                     "shape":  "sphere",
+                                                     "size":  [
+                                                                  0.8,
+                                                                  0.8,
+                                                                  0.8
+                                                              ],
+                                                     "stompable":  true,
+                                                     "asset":  "snowball_model"
+                                                 },
+                                  "snowball_b":  {
+                                                     "behavior":  {
+                                                                      "axis":  "z",
+                                                                      "range":  2,
+                                                                      "speed":  2.5,
+                                                                      "type":  "patrol"
+                                                                  },
+                                                     "color":  "#DDEEFF",
+                                                     "id":  "snowball_b",
+                                                     "kind":  "enemy",
+                                                     "name":  "雪球怪",
+                                                     "position":  [
+                                                                      18,
+                                                                      7.2,
+                                                                      3
+                                                                  ],
+                                                     "shape":  "sphere",
+                                                     "size":  [
+                                                                  0.8,
+                                                                  0.8,
+                                                                  0.8
+                                                              ],
+                                                     "stompable":  true,
+                                                     "asset":  "snowball_model"
+                                                 },
+                                  "snowball_c":  {
+                                                     "behavior":  {
+                                                                      "axis":  "x",
+                                                                      "range":  2.5,
+                                                                      "speed":  3,
+                                                                      "type":  "patrol"
+                                                                  },
+                                                     "color":  "#DDEEFF",
+                                                     "id":  "snowball_c",
+                                                     "kind":  "enemy",
+                                                     "name":  "雪球怪",
+                                                     "position":  [
+                                                                      30,
+                                                                      13.2,
+                                                                      2
+                                                                  ],
+                                                     "shape":  "sphere",
+                                                     "size":  [
+                                                                  0.8,
+                                                                  0.8,
+                                                                  0.8
+                                                              ],
+                                                     "stompable":  true,
+                                                     "asset":  "snowball_model"
+                                                 },
+                                  "snowball_d":  {
+                                                     "behavior":  {
+                                                                      "axis":  "z",
+                                                                      "range":  2,
+                                                                      "speed":  2,
+                                                                      "type":  "patrol"
+                                                                  },
+                                                     "color":  "#DDEEFF",
+                                                     "id":  "snowball_d",
+                                                     "kind":  "enemy",
+                                                     "name":  "雪球怪",
+                                                     "position":  [
+                                                                      42,
+                                                                      18.2,
+                                                                      1
+                                                                  ],
+                                                     "shape":  "sphere",
+                                                     "size":  [
+                                                                  0.8,
+                                                                  0.8,
+                                                                  0.8
+                                                              ],
+                                                     "stompable":  true,
+                                                     "asset":  "snowball_model"
+                                                 },
+                                  "crown_goal":  {
+                                                     "color":  "#FFD700",
+                                                     "id":  "crown_goal",
+                                                     "kind":  "goal",
+                                                     "name":  "金色王冠",
+                                                     "position":  [
+                                                                      48,
+                                                                      23.5,
+                                                                      0
+                                                                  ],
+                                                     "shape":  "star",
+                                                     "size":  [
+                                                                  1.2,
+                                                                  1.2,
+                                                                  1.2
+                                                              ],
+                                                     "asset":  "crown_model"
+                                                 },
+                                  "cloud_1":  {
+                                                  "color":  "#FFFFFF",
+                                                  "id":  "cloud_1",
+                                                  "kind":  "decor",
+                                                  "name":  "装饰云",
+                                                  "position":  [
+                                                                   10,
+                                                                   5,
+                                                                   6
+                                                               ],
+                                                  "shape":  "cloud",
+                                                  "size":  [
+                                                               4,
+                                                               2,
+                                                               2
+                                                           ]
+                                              },
+                                  "cloud_2":  {
+                                                  "color":  "#FFFFFF",
+                                                  "id":  "cloud_2",
+                                                  "kind":  "decor",
+                                                  "name":  "装饰云",
+                                                  "position":  [
+                                                                   26,
+                                                                   11,
+                                                                   -7
+                                                               ],
+                                                  "shape":  "cloud",
+                                                  "size":  [
+                                                               5,
+                                                               2,
+                                                               2
+                                                           ]
+                                              },
+                                  "cloud_3":  {
+                                                  "color":  "#FFFFFF",
+                                                  "id":  "cloud_3",
+                                                  "kind":  "decor",
+                                                  "name":  "装饰云",
+                                                  "position":  [
+                                                                   44,
+                                                                   19,
+                                                                   5
+                                                               ],
+                                                  "shape":  "cloud",
+                                                  "size":  [
+                                                               4,
+                                                               1.5,
+                                                               2
+                                                           ]
+                                              },
+                                  "sign_start":  {
+                                                     "color":  "#D0EEFF",
+                                                     "id":  "sign_start",
+                                                     "kind":  "sign",
+                                                     "name":  "提示牌",
+                                                     "position":  [
+                                                                      -2,
+                                                                      1.8,
+                                                                      0
+                                                                  ],
+                                                     "text":  "🐧 跳吧！登上顶峰拿王冠！",
+                                                     "size":  [
+                                                                  2.4,
+                                                                  1.4,
+                                                                  0.2
+                                                              ]
+                                                 },
+                                  "island_bridge":  {
+                                                        "color":  "#A8E86A",
+                                                        "id":  "island_bridge",
+                                                        "kind":  "platform",
+                                                        "name":  "中转小岛",
+                                                        "position":  [
+                                                                         45,
+                                                                         19.5,
+                                                                         0
+                                                                     ],
+                                                        "size":  [
+                                                                     3,
+                                                                     1,
+                                                                     3
+                                                                 ],
+                                                        "solid":  true
+                                                    }
+                              },
+                 "sounds":  {
+
+                            },
+                 "assets":  {
+                                "penguin_model":  {
+                                                      "id":  "penguin_model",
+                                                      "kind":  "model3d",
+                                                      "name":  "小企鹅",
+                                                      "prompt":  "A cute cartoon penguin character, black and white body, yellow beak and feet, round belly, big sparkling eyes, wearing a tiny blue scarf",
+                                                      "state":  "ready",
+                                                      "url":  "/assets/b5f3c62de2efda045fd5.fbx",
+                                                      "error":  "",
+                                                      "preview":  "https://test-cloud-maps-s3-sg-143920987427-ap-southeast-1-an.s3.ap-southeast-1.amazonaws.com/resshop/1000/8c657f0b3145bbfd533608a108adcd01a811cd04de51a2ef9ade387ccd8b3ff6/ace2d2d3c448b972ce726d9554137752.png",
+                                                      "ms":  224432
+                                                  },
+                                "snowball_model":  {
+                                                       "id":  "snowball_model",
+                                                       "kind":  "model3d",
+                                                       "name":  "雪球怪",
+                                                       "prompt":  "A round fluffy snowball monster, white icy surface with blue tint, two angry cartoon eyes, tiny stick arms sticking out, spiky icy texture",
+                                                       "state":  "ready",
+                                                       "url":  "/assets/854198ed7edebc43f29c.fbx",
+                                                       "error":  "",
+                                                       "preview":  "https://test-cloud-maps-s3-sg-143920987427-ap-southeast-1-an.s3.ap-southeast-1.amazonaws.com/resshop/1000/e510414580fb1917c6de2f724e5485344d3fb88403d052b997a382cb2211ecca/c719c706d1d3f615c17d993b4c4f5db8.png",
+                                                       "ms":  285334
+                                                   },
+                                "crown_model":  {
+                                                    "id":  "crown_model",
+                                                    "kind":  "sprite",
+                                                    "name":  "金色王冠",
+                                                    "prompt":  "A shiny golden crown, jeweled with blue and red gemstones, glowing golden rim, cartoon style, floating and sparkling",
+                                                    "state":  "ready",
+                                                    "url":  "/assets/fbf746234bc2e8dfb7be.png",
+                                                    "error":  "",
+                                                    "preview":  "https://test-cloud-maps-s3-sg-143920987427-ap-southeast-1-an.s3.ap-southeast-1.amazonaws.com/resshop/1000/90e0b865f6a611a03938adb7b7a2914d7277c110a46498b5ee03f3b54c8184c7/5097468ac60684484caadbdc85c527ad.png",
+                                                    "ms":  415261,
+                                                    "fallback":  "task timeout"
+                                                },
+                                "gem_sprite":  {
+                                                   "id":  "gem_sprite",
+                                                   "kind":  "model3d",
+                                                   "name":  "宝石",
+                                                   "prompt":  "A small faceted gemstone, teal-blue crystal, glowing inner light, cartoon style",
+                                                   "state":  "ready",
+                                                   "url":  "/assets/db106a38bb0a4950da22.fbx",
+                                                   "error":  "",
+                                                   "preview":  "https://test-cloud-maps-s3-sg-143920987427-ap-southeast-1-an.s3.ap-southeast-1.amazonaws.com/resshop/1000/529bb902e374eb1584baa5306061aee1dbc84abd517cebfe72650fe1be46f60a/3306a6b97ab80ccfb5f06e2b3c1ab9f1.png",
+                                                   "ms":  239793
+                                               },
+                                "island_tex":  {
+                                                   "id":  "island_tex",
+                                                   "kind":  "texture",
+                                                   "name":  "浮岛草地贴图",
+                                                   "prompt":  "Top view of a cartoon floating island, bright green grass on top, snowy icy edges, layered soil and rock underneath, cute cheerful style",
+                                                   "state":  "ready",
+                                                   "url":  "/assets/de562633f1ea346fea91.png",
+                                                   "preview":  "",
+                                                   "ms":  49317
+                                               },
+                                "bgm_sky":  {
+                                                "id":  "bgm_sky",
+                                                "kind":  "music",
+                                                "name":  "天空冒险BGM",
+                                                "prompt":  "Cheerful upbeat adventure music for a sky island platformer, light xylophone and bells, playful and cute, loopable",
+                                                "state":  "ready",
+                                                "url":  "/assets/da677d6ceec0e94a0b92.mp3",
+                                                "preview":  "",
+                                                "ms":  79622
+                                            }
+                            }
+             },
+    "assets":  {
+                   "crown_model":  {
+                                       "state":  "ready",
+                                       "url":  "http://127.0.0.1:5300/assets/fbf746234bc2e8dfb7be.png",
+                                       "kind":  "sprite"
+                                   },
+                   "gem_sprite":  {
+                                      "state":  "ready",
+                                      "url":  "http://127.0.0.1:5300/assets/db106a38bb0a4950da22.fbx",
+                                      "kind":  "model3d"
+                                  },
+                   "snowball_model":  {
+                                          "state":  "ready",
+                                          "url":  "http://127.0.0.1:5300/assets/854198ed7edebc43f29c.fbx",
+                                          "kind":  "model3d"
+                                      },
+                   "penguin_model":  {
+                                         "state":  "ready",
+                                         "url":  "http://127.0.0.1:5300/assets/b5f3c62de2efda045fd5.fbx",
+                                         "kind":  "model3d"
+                                     },
+                   "island_tex":  {
+                                      "state":  "ready",
+                                      "url":  "http://127.0.0.1:5300/assets/de562633f1ea346fea91.png",
+                                      "kind":  "texture"
+                                  },
+                   "bgm_sky":  {
+                                   "state":  "ready",
+                                   "url":  "http://127.0.0.1:5300/assets/da677d6ceec0e94a0b92.mp3",
+                                   "kind":  "music"
+                               }
+               }
+}

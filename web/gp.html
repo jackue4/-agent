@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+<title>造梦游戏</title>
+<!-- Shared Godot web engine (web/game/index.wasm) running one game's own pack: gp.html?pck=<url>[&seed=n][&ai=1] -->
+<style>
+html, body, #canvas { margin: 0; padding: 0; border: 0; }
+body { background: #120e2b; overflow: hidden; touch-action: none; }
+#canvas { display: block; width: 100vw; height: 100vh; }
+#canvas:focus { outline: none; }
+#status { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #aaa2c3; font: 16px sans-serif; }
+#status progress { width: 50%; }
+</style>
+<script>
+(function () {
+  const query = new URLSearchParams(location.search);
+  const session = query.get('previewSession') || '';
+  const expectedBuildId = query.get('expectedBuildId') || '';
+  const post = payload => parent.postMessage({ __ugc: true, payload: { ...payload, previewSession: session } }, location.origin);
+  // buildId/sourceRevision on ready must come from the manifest inside the loaded pack.
+  window.ugcEmit = function (json) { try { post(JSON.parse(json)); } catch (error) { window.ugcLoadFailure('游戏回执无法读取：' + error.message); } };
+  window.ugcLoadFailure = function (message) {
+    const text = String(message || '游戏载入失败');
+    const status = document.getElementById('status');
+    if (status) { status.setAttribute('role', 'alert'); status.textContent = text; }
+    post({ type: 'js_error', message: text, expectedBuildId, loaded: false });
+  };
+  window.addEventListener('error', event => window.ugcLoadFailure(event.message || '游戏文件载入失败'));
+  window.addEventListener('unhandledrejection', event => window.ugcLoadFailure(event.reason?.message || String(event.reason || '游戏载入失败')));
+})();
+// messages that arrive before the game registered ugcReceive are replayed once it does
+(function () {
+  const early = [];
+  window.addEventListener('message', function (e) {
+    const d = e.data;
+    if (e.source !== parent || e.origin !== location.origin || !d || !d.__ugc_in) return;
+    const s = JSON.stringify(d.payload);
+    if (typeof window.ugcReceive === 'function') window.ugcReceive(s); else early.push(s);
+  });
+  const t = setInterval(function () {
+    if (typeof window.ugcReceive !== 'function') return;
+    clearInterval(t);
+    while (early.length) window.ugcReceive(early.shift());
+  }, 100);
+})();
+</script>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="status"><progress></progress></div>
+<script src="game/index.js"></script>
+<script>
+(function () {
+  const q = new URLSearchParams(location.search);
+  const pck = q.get('pck');
+  const status = document.getElementById('status');
+  const fail = msg => window.ugcLoadFailure(msg);
+  if (!pck) return fail('缺少游戏包');
+  // Acceptance observes its own game; loading it must not steal the editor's keyboard.
+  const engine = new Engine({ executable: 'game/index', mainPack: pck, canvasResizePolicy: 2, focusCanvas: q.get('runtimeTest') !== '1', args: [] });
+  engine.startGame({
+    onProgress: (cur, total) => { const p = status.querySelector('progress'); if (p && total > 0) { p.max = total; p.value = cur; } },
+  }).then(() => status.remove(), err => fail(String(err && err.message || err)));
+})();
+</script>
+</body>
+</html>

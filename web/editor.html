@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+  <meta name="theme-color" content="#080e17">
+  <title>造梦 · 创作中</title>
+  <link rel="stylesheet" href="/app.css">
+  <link rel="stylesheet" href="/editor.css">
+  <link rel="stylesheet" href="/sketch-board.css">
+  <link rel="stylesheet" href="/editor-mobile.css">
+  <link rel="icon" type="image/png" href="/visuals/ai-robot.png">
+</head>
+<body class="ed">
+<div class="app" id="app">
+  <header class="etop">
+    <a class="ib back" href="/" aria-label="返回"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg></a>
+    <input id="title" class="title-in" value="未命名游戏" maxlength="40" aria-label="游戏名称">
+    <div class="seg" id="viewSeg" aria-label="对话与预览">
+      <button data-view="chat" class="on" aria-pressed="true">Chat</button>
+      <button data-view="preview" aria-pressed="false">Preview</button>
+    </div>
+    <button class="ib" id="moreBtn" aria-label="更多选项" aria-expanded="false" aria-controls="moreMenu"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+  </header>
+  <div class="menu" id="moreMenu" hidden aria-label="作品选项">
+    <button id="pubBtn">发布游戏</button>
+    <button id="verBtn">版本历史</button>
+    <button id="frameBtn">显示全部</button>
+    <button id="muteBtn">关闭声音</button>
+    <button id="fsBtn">全屏预览</button>
+    <button id="retryAssetsBtn" hidden>重试失败素材</button>
+  </div>
+  <main class="stage dock-closed" id="stage" aria-label="游戏场景">
+    <div class="preview-modes seg" id="modeSeg" aria-label="创作模式"><button data-m="edit" class="on" aria-pressed="true">编辑</button><button data-m="play" aria-pressed="false">试玩</button></div>
+    <div class="scene-space" id="sceneSpace">
+    <div class="scene-toolbar"><button class="workflow-toggle" id="workflowBtn" aria-controls="workflowPanel" aria-expanded="false"><span class="workflow-dot" aria-hidden="true"></span><span id="workflowStatus" role="status">等待你的创作想法</span><span id="sceneTiming" class="scene-timing"></span><span class="workflow-link">查看记录 ›</span></button><div id="watchSwitch" class="watch-switch" hidden aria-label="制作与验收视图"><button id="watchMaking" aria-pressed="true">看制作</button><button id="watchTesting" aria-pressed="false">看验收</button></div><button id="sketchBtn" class="sketch-toggle" hidden aria-pressed="false" aria-controls="sketchBoard">✎ 草图</button><button id="scenePlay" class="scene-play" hidden>先试玩</button></div>
+    <div id="constructionStatus" class="construction-status" role="status" hidden></div>
+    <div id="sceneEditBar" class="scene-edit-bar" hidden aria-label="选中场景物体">
+      <strong id="sceneEditName"></strong><span id="sceneEditPosition"></span>
+      <label>步长 <select id="sceneEditStep" aria-label="物体移动步长"><option value="0.25">0.25</option><option value="1" selected>1</option><option value="2">2</option></select></label>
+      <div id="sceneNudge" class="scene-nudge" aria-label="移动选中物体"><button data-axis="0" data-sign="-1" aria-label="沿 X 负方向移动">X−</button><button data-axis="0" data-sign="1" aria-label="沿 X 正方向移动">X+</button><button data-axis="1" data-sign="-1" aria-label="向下移动">Y−</button><button data-axis="1" data-sign="1" aria-label="向上移动">Y+</button><button data-axis="2" data-sign="-1" aria-label="沿 Z 负方向移动">Z−</button><button data-axis="2" data-sign="1" aria-label="沿 Z 正方向移动">Z+</button></div>
+      <button id="sceneUndo">撤销移动</button><button id="sceneFrame">恢复视角</button><span id="sceneEditNote" role="status"></span>
+    </div>
+    <div class="stage-frame" id="frameWrap">
+      <iframe id="rt" title="游戏预览" src="about:blank" allow="autoplay; fullscreen" tabindex="0"></iframe>
+      <div class="loading" id="rtLoading" role="status"><div class="loading-mark"><img src="/visuals/ai-robot.png" alt="" width="80" height="80"><div class="spin"></div></div><span>正在打开场景…</span></div>
+      <section id="playtestSurface" class="playtest-surface" hidden aria-label="正在执行的实际验收画面">
+        <div class="watch-picture"><iframe id="testRt" title="正在实际运行的验收游戏" src="about:blank" allow="autoplay; fullscreen" tabindex="-1" hidden></iframe><img id="watchFrame" hidden alt="本次验收的真实画面"><div id="watchWaiting" class="watch-waiting">正在启动真实游戏，等待首帧</div></div>
+        <div class="watch-caption"><div><span id="watchKind"></span><strong id="watchStep"></strong></div><span id="watchStatus" role="status"></span></div>
+        <div class="watch-detail"><span id="watchNote"></span><span id="watchChecks"></span><span id="watchErrors"></span></div>
+      </section>
+      <section id="sketchBoard" class="sketch-board" hidden aria-label="AI 铅笔草图：主制作进行时同步绘制的游戏原型"></section>
+    </div>
+    </div>
+    <aside class="workflow-panel" id="workflowPanel" aria-label="制作记录" hidden>
+      <div class="chat-head"><h2><span class="studio-live-dot" aria-hidden="true"></span>制作记录</h2><button class="ib" id="workflowClose" aria-label="收起制作记录"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 7 7-7 7"/></svg></button></div>
+      <div class="studio-clock"><span id="iterationKind">先做小而精的 Demo</span><div><strong id="iterationElapsed">—</strong><span id="iterationTarget">目标 5 分钟</span></div><p id="iterationClockNote">开始后展示真实计时和制作事件</p></div>
+      <div class="workflow-content" id="workflowContent"></div>
+      <div class="studio-next" id="studioNext" hidden><strong>接下来，由你决定</strong><p>先玩一会儿，再选一个改进。</p><button id="improveBtn" class="btn">继续一个改进</button><div id="improvementOptions" hidden></div></div>
+      <div class="workflow-actions"><button id="studioPlay" class="btn studio-play" hidden>先试玩</button><button id="workflowRepair" class="btn" hidden>继续修复</button><button id="previewRetry" class="btn" hidden>重新打开预览</button><small id="studioBuildNote"></small></div>
+    </aside>
+    <aside class="feed" id="feed" hidden role="dialog" aria-label="对话记录">
+      <div class="chat-head">
+        <h2><img src="/visuals/ai-robot.png" alt="" width="32" height="32">游戏助手 <span class="assistant-caption">一起让灵感发生</span></h2>
+        <button class="ib" id="chatClose" aria-label="关闭对话"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </div>
+      <p class="chat-empty" id="chatEmpty">说说你的想法，一起把游戏做好。</p>
+      <div class="msgs" id="msgs" tabindex="0" aria-label="聊天消息"></div>
+    </aside>
+  </main>
+  <footer class="composer" id="composer">
+    <div class="sel-chip" id="selChip" hidden></div>
+    <div class="module-focus" id="moduleFocus" hidden><div><span id="moduleFocusName"></span><button type="button" id="moduleFocusClear" aria-label="取消模块聚焦" title="取消模块聚焦">×</button></div><div class="module-suggestions" id="moduleSuggestions"></div></div>
+    <div class="iteration-options"><div class="model-option"><label for="modelSelect">创作模型</label><select id="modelSelect" aria-describedby="modelNote" disabled><option>正在加载…</option></select><button id="modelRetry" type="button" hidden>重试</button></div><div class="budget-option"><label for="iterationTier">这一轮</label><select id="iterationTier" aria-label="本轮制作档位"><option value="demo" selected>Demo · 快速出可玩版</option><option value="quality">品质 · AI 全力打磨</option></select></div><span id="modelNote" class="model-note" role="status" hidden></span></div>
+    <div class="cbar">
+      <button class="ib chat-toggle" id="chatBtn" aria-label="打开对话记录" aria-controls="feed" aria-expanded="false" title="对话记录"><img src="/visuals/ai-robot.png" alt="" width="36" height="36"></button>
+      <textarea id="input" rows="1" enterkeyhint="send" aria-label="描述你想修改的内容" placeholder="说说你想怎么改…"></textarea>
+      <button class="send stop" id="stopBtn" hidden aria-label="停止搭建" title="停止搭建"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2"/></svg></button>
+      <button class="send" id="sendBtn" aria-label="发送" title="发送"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 18V6m-5 5 5-5 5 5"/></svg><span id="sendLabel"></span></button>
+    </div>
+    <div class="participation-status" id="participationStatus" hidden><span id="participationNote" role="status"></span><details id="participationDetails" hidden><summary>建议记录</summary><ul id="participationList"></ul><small>送达表示制作方已收到建议，不代表已经实现或验收通过。</small></details></div>
+  </footer>
+</div>
+<script type="module" src="/editor.js"></script>
+</body>
+</html>

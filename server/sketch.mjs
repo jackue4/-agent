@@ -108,13 +108,23 @@ export class SketchBoard {
   }
   broadcast(message) {
     const line = 'data: ' + JSON.stringify(message) + '\n\n';
-    for (const c of this.clients) { try { c.write(line); } catch { this.clients.delete(c); } }
+    for (const c of this.clients) if (!writeSse(c, line)) this.clients.delete(c);
   }
   attach(res) {
-    res.write('data: ' + JSON.stringify({ op: 'snapshot', n: this.n, state: this.state }) + '\n\n');
+    writeSse(res, 'data: ' + JSON.stringify({ op: 'snapshot', n: this.n, state: this.state }) + '\n\n');
     this.clients.add(res);
     return () => this.clients.delete(res);
   }
+}
+
+/** Push one SSE frame and disable Nagle so a proxy sees the stroke immediately. */
+function writeSse(res, chunk) {
+  try {
+    res.socket?.setNoDelay?.(true);
+    res.write(chunk);
+    if (typeof res.flush === 'function') res.flush();
+    return true;
+  } catch { return false; }
 }
 
 export const SKETCH_TOOL = {

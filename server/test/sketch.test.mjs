@@ -279,12 +279,18 @@ test('a real production round runs the artist in parallel and serves the sketch 
   const snapshot = new Response();
   await api.requestHandler(Object.assign(Readable.from([]), { url: '/api/projects/' + p.id + '/sketch', method: 'GET', headers: {} }), snapshot);
   await snapshot.done;
-  assert.equal(JSON.parse(Buffer.concat(snapshot.parts).toString()).items.length, saved.items.length);
+  const snap = JSON.parse(Buffer.concat(snapshot.parts).toString());
+  assert.equal(snap.items.length, saved.items.length);
+  assert.equal(typeof snap.n, 'number');
 
   const req = Object.assign(Readable.from([]), { url: '/api/projects/' + p.id + '/sketch?stream=1', method: 'GET', headers: {} });
   const stream = new Response();
   await api.requestHandler(req, stream);
-  const first = Buffer.concat(stream.parts).toString().split('\n\n').find(block => block.startsWith('data: '));
+  const raw = Buffer.concat(stream.parts).toString();
+  const ping = raw.split('\n\n').find(block => block.includes('event: ping'));
+  const pad = JSON.parse(ping.slice(ping.indexOf('data:') + 5)).pad;
+  assert.ok(pad.length >= 4096, 'the first frame has to clear a reverse proxy buffer');
+  const first = raw.split('\n\n').find(block => block.startsWith('data: '));
   assert.equal(JSON.parse(first.slice(6)).op, 'snapshot');
   api.sketchBoardOf(p).apply({ op: 'note', note: '实时' });
   assert.match(Buffer.concat(stream.parts).toString(), /"op":"note","note":"实时"/);

@@ -793,6 +793,30 @@ function send(res, code, obj) {
   res.writeHead(code, { 'content-type': typeof obj === 'string' ? 'text/plain; charset=utf-8' : 'application/json; charset=utf-8', 'cache-control': 'no-store' });
   res.end(body);
 }
+
+// cloudflared and other reverse proxies hold a text/event-stream until the first chunk clears
+// their buffer (often 4 KB). A 2 KB pad stays inside that buffer, so remote viewers never see
+// the strokes that arrive instantly on localhost. 8 KB forces the first frame out; each later
+// write disables Nagle. Callers still need a snapshot poll, because a tunnel can stall again.
+const SSE_PAD = '.'.repeat(8192);
+function writeSse(res, chunk) {
+  try {
+    res.socket?.setNoDelay?.(true);
+    res.write(chunk);
+    if (typeof res.flush === 'function') res.flush();
+    return true;
+  } catch { return false; }
+}
+function openSse(req, res) {
+  res.writeHead(200, {
+    'content-type': 'text/event-stream; charset=utf-8', 'cache-control': 'no-store, no-transform',
+    'content-encoding': 'identity', 'connection': 'keep-alive', 'x-accel-buffering': 'no',
+    'access-control-allow-origin': '*',
+  });
+  if (res.flushHeaders) res.flushHeaders();
+  req.socket?.setNoDelay?.(true);
+  writeSse(res, 'retry: 2000\nevent: ping\ndata: ' + JSON.stringify({ pad: SSE_PAD }) + '\n\n');
+}
 // Godot's web build ships a ~40 MB .wasm; over a phone link that is minutes of nothing unless
 // we gzip it. Text-like files and wasm compress well (wasm → ~9 MB), so serve them encoded.
 const GZIP_EXT = new Set(['.wasm', '.js', '.mjs', '.html', '.css', '.json', '.svg', '.txt']);
@@ -1089,35 +1113,21 @@ export async function requestHandler(req, res) {
           const cursor = req.headers['last-event-id'] ?? url.searchParams.get('since') ?? 0;
           const replay = eventReplay(p, cursor);
           if (url.searchParams.get('stream') !== '1') return send(res, 200, replay);
-          // Reverse proxies (cloudflared, nginx, Cloudflare) buffer text/event-stream unless told not to.
-          // no-transform + identity keep them from compressing, x-accel-buffering is nginx's switch, and
-          // the 4 KB comment padding forces the very first TCP/QUIC frame out before any real event fires.
-          res.writeHead(200, {
-            'content-type': 'text/event-stream; charset=utf-8', 'cache-control': 'no-store, no-transform',
-            'content-encoding': 'identity', 'connection': 'keep-alive', 'x-accel-buffering': 'no',
-            'access-control-allow-origin': '*',
-          });
-          if (res.flushHeaders) res.flushHeaders();
-          // named events (not comments): some proxies drop comment-only frames; EventSource.onmessage ignores 'ping'
-          res.write('retry: 2000\nevent: ping\ndata: ' + JSON.stringify({ pad: '.'.repeat(2048) }) + '\n\n');
-          if (replay.reset) res.write('id: ' + p.seq + '\ndata: ' + JSON.stringify({ type: 'reset', seq: p.seq, workflow: p.workflow }) + '\n\n');
-          else for (const event of replay.events) res.write('id: ' + event.seq + '\ndata: ' + JSON.stringify(event) + '\n\n');
+          // named ping: some proxies drop comment-only frames; EventSource.onmessage ignores 'ping'
+          openSse(req, res);
+          if (replay.reset) writeSse(res, 'id: ' + p.seq + '\ndata: ' + JSON.stringify({ type: 'reset', seq: p.seq, workflow: p.workflow }) + '\n\n');
+          else for (const event of replay.events) writeSse(res, 'id: ' + event.seq + '\ndata: ' + JSON.stringify(event) + '\n\n');
           p.clients.add(res);
-          const ka = setInterval(() => res.write('event: ping\ndata: ' + Date.now() + '\n\n'), 10000);
+          const ka = setInterval(() => { if (!writeSse(res, 'event: ping\ndata: ' + Date.now() + '\n\n')) clearInterval(ka); }, 10000);
           req.on('close', () => { clearInterval(ka); p.clients.delete(res); });
           return;
         }
         if (b === 'sketch' && req.method === 'GET') {
           const board = sketchBoardOf(p);
-          if (url.searchParams.get('stream') !== '1') return send(res, 200, board.snapshot());
-          res.writeHead(200, {
-            'content-type': 'text/event-stream; charset=utf-8', 'cache-control': 'no-store, no-transform',
-            'content-encoding': 'identity', 'connection': 'keep-alive', 'x-accel-buffering': 'no',
-          });
-          if (res.flushHeaders) res.flushHeaders();
-          res.write('retry: 2000\nevent: ping\ndata: ' + JSON.stringify({ pad: '.'.repeat(2048) }) + '\n\n');
+          if (url.searchParams.get('stream') !== '1') return send(res, 200, { ...board.snapshot(), n: board.n });
+          openSse(req, res);
           const detach = board.attach(res);
-          const ka = setInterval(() => res.write('event: ping\ndata: ' + Date.now() + '\n\n'), 10000);
+          const ka = setInterval(() => { if (!writeSse(res, 'event: ping\ndata: ' + Date.now() + '\n\n')) clearInterval(ka); }, 10000);
           req.on('close', () => { clearInterval(ka); detach(); });
           return;
         }

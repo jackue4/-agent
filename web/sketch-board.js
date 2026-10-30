@@ -172,6 +172,13 @@ function unionBox(items) {
   return { x, y, w: Math.max(...boxes.map(b => b.x + b.w)) - x, h: Math.max(...boxes.map(b => b.y + b.h)) - y };
 }
 
+/** Identity of a board item, ignoring client-only stroke geometry. */
+function itemSig(item) {
+  const copy = { ...item };
+  delete copy.strokes;
+  return JSON.stringify(copy);
+}
+
 const PENCIL_SVG = '<svg viewBox="0 0 36 36" aria-hidden="true"><g transform="translate(2 34) rotate(-45)"><polygon points="0,0 5,-1.6 5,1.6" fill="#333"/><polygon points="5,-1.6 12,-3.6 12,3.6 5,1.6" fill="#e8c99a"/><rect x="12" y="-3.6" width="22" height="7.2" fill="#f2c230"/><rect x="12" y="-1" width="22" height="2" fill="#dba91c"/><rect x="34" y="-3.6" width="3" height="7.2" fill="#b9b9b9"/><rect x="37" y="-3.6" width="4.5" height="7.2" rx="1.6" fill="#e98b96"/></g></svg>';
 
 /**
@@ -192,40 +199,121 @@ export class SketchBoardView {
     root.querySelector('.sketch-close').onclick = event => { event.stopPropagation(); this.onChoice('hidden'); };
     root.addEventListener('click', () => { if (this.view === 'pip') this.onChoice('full'); });
     this.state = { w: 1000, h: 562, round: 0, phase: 'idle', note: '', message: '' };
-    this.items = []; this.queue = []; this.task = null; this.tip = null;
+    this.items = []; this.queue = []; this.task = null; this.tip = null; this.plan = new Map();
     this.view = 'hidden'; this.live = false; this.maker = ''; this.activity = ''; this.canCollapse = false;
+    this.seenN = 0; this.sseAt = 0; this.pollTimer = null; this.pollGen = 0; this.polling = false; this.projectId = '';
     this.scale = 1; this.raf = 0; this.last = 0;
     new ResizeObserver(() => this.resize()).observe(this.paper);
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') this.play(); });
   }
   connect(projectId) {
     this.es?.close();
+    clearInterval(this.pollTimer);
+    this.pollGen += 1;
+    this.polling = false;
+    this.projectId = projectId;
+    this.sseAt = 0;
+    const gen = this.pollGen;
     this.es = new EventSource('/api/projects/' + encodeURIComponent(projectId) + '/sketch?stream=1');
-    this.es.onmessage = event => { try { this.receive(JSON.parse(event.data)); } catch (error) { console.warn('sketch event', error); } };
+    this.es.onmessage = event => {
+      this.sseAt = Date.now();
+      try { this.receive(JSON.parse(event.data)); } catch (error) { console.warn('sketch event', error); }
+    };
+    // A buffered tunnel can keep the socket "open" while no stroke arrives. Polling the snapshot
+    // is what still moves the pencil; a healthy stream skips the poll.
+    this.es.onerror = () => { if (gen !== this.pollGen) return; this.sseAt = 0; this.pollSnapshot(); };
+    this.pollTimer = setInterval(() => this.pollSnapshot(), 1500);
+    this.pollSnapshot();
   }
-  close() { this.es?.close(); this.es = null; cancelAnimationFrame(this.raf); this.raf = 0; }
+  close() {
+    this.es?.close(); this.es = null;
+    clearInterval(this.pollTimer); this.pollTimer = null;
+    this.pollGen += 1; this.projectId = '';
+    cancelAnimationFrame(this.raf); this.raf = 0;
+  }
+  async pollSnapshot() {
+    if (!this.projectId || this.polling) return;
+    if (this.sseAt && Date.now() - this.sseAt < 1500) return;
+    const gen = this.pollGen, projectId = this.projectId;
+    this.polling = true;
+    try {
+      const res = await fetch('/api/projects/' + encodeURIComponent(projectId) + '/sketch', { cache: 'no-store' });
+      if (!res.ok || gen !== this.pollGen) return;
+      if (this.sseAt && Date.now() - this.sseAt < 1500) return;
+      const body = await res.json();
+      this.receive({ op: 'snapshot', n: body.n, state: body });
+    } catch (error) { console.warn('sketch poll', error); }
+    finally { this.polling = false; }
+  }
   receive(msg) {
-    if (msg.op === 'snapshot') return this.load(msg.state);
+    if (msg.op === 'snapshot') return this.applySnapshot(msg.state, msg.n);
+    if (msg.n) this.noteSeen(msg.n);
     if (msg.op === 'begin') {
       this.flush();
       Object.assign(this.state, { w: msg.w, h: msg.h, round: msg.round || 0, phase: 'drawing', note: '', message: '' });
-      if (!msg.keep) this.items = [];
+      if (!msg.keep) { this.items = []; this.plan = new Map(); }
+      else this.remember(this.items);
       this.live = true; this.resize(true); this.renderHead();
       this.onChange({ begin: true });
       return;
     }
     this.live = true;
     if (msg.op === 'activity') { this.activity = msg.text || ''; this.renderMaker(); return; }
+    if (msg.op === 'add' && msg.item) {
+      const sig = itemSig(msg.item);
+      if (this.plan.get(msg.item.id) === sig) return;
+      this.plan.set(msg.item.id, sig);
+    } else if (msg.op === 'erase') for (const id of msg.ids || []) this.plan.delete(id);
     this.queue.push(msg);
-    this.play();
+    // Show the board before playing, otherwise a hidden board finishes the stroke with no pencil.
     this.onChange({});
+    this.play();
+  }
+  noteSeen(n) { if (n > this.seenN) this.seenN = n; }
+  remember(items) { this.plan = new Map(items.map(item => [item.id, itemSig(item)])); }
+  applySnapshot(state, n = 0) {
+    if (!state || (n && this.seenN && n < this.seenN)) return;
+    this.noteSeen(n);
+    const phase = state.phase || 'idle';
+    const active = phase === 'drawing' || phase === 'waiting';
+    if (active) this.live = true;
+    const items = Array.isArray(state.items) ? state.items : [];
+    Object.assign(this.state, { w: state.w || 1000, h: state.h || 562, round: state.round || 0, task: state.task || '', phase, note: state.note || '', message: state.message || '' });
+    this.activity = state.activity || '';
+    // A finished board can appear at once. An in-progress board, or one the viewer is already
+    // watching, only queues the strokes that are not on paper yet.
+    if (!active && !this.live && !this.task && !this.queue.length) return this.load(state);
+    if (this.samePlan(items)) { this.renderHead(); this.renderMaker(); this.onChange({}); this.play(); return; }
+    this.syncPlan(items);
+    this.resize(true); this.renderHead(); this.renderMaker();
+    this.onChange({});
+    this.play();
+  }
+  samePlan(items) {
+    return this.plan.size === items.length && items.every(item => this.plan.get(item.id) === itemSig(item));
+  }
+  /** Queue erase/add for anything the accepted plan does not already show. */
+  syncPlan(items) {
+    const next = new Map(items.map(item => [item.id, itemSig(item)]));
+    const dropped = [...this.plan.keys()].filter(id => next.get(id) !== this.plan.get(id));
+    if (dropped.length) {
+      for (const id of dropped) this.plan.delete(id);
+      this.queue.push({ op: 'erase', ids: dropped });
+    }
+    for (const item of items) {
+      if (this.plan.get(item.id) === next.get(item.id)) continue;
+      this.plan.set(item.id, next.get(item.id));
+      this.queue.push({ op: 'add', item: { ...item } });
+    }
   }
   load(state) {
     if (!state) return;
     this.queue = []; this.task = null;
     this.state = { w: state.w || 1000, h: state.h || 562, round: state.round || 0, task: state.task || '', phase: state.phase || 'idle', note: state.note || '', message: state.message || '' };
     this.items = Array.isArray(state.items) ? state.items.map(item => ({ ...item, strokes: itemStrokes(item) })) : [];
+    this.remember(this.items);
     this.activity = state.activity || '';
+    if (['drawing', 'waiting'].includes(this.state.phase)) this.live = true;
     this.resize(true); this.renderHead(); this.renderMaker(); this.hideTools();
     this.onChange({});
   }
@@ -332,7 +420,7 @@ export class SketchBoardView {
     this.task = task.then || null;
     this.redraw();
   }
-  /** Completes everything queued without animation (hidden board, new run, reconnect). */
+  /** Completes everything queued without animation (board stays hidden, a new round, or a background tab). */
   flush() {
     cancelAnimationFrame(this.raf); this.raf = 0;
     let guard = 10000;

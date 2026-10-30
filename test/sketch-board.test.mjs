@@ -67,6 +67,29 @@ test('playback always spends its frame budget, so a float remainder can never fr
   } finally { for (const k of ['window', 'ResizeObserver', 'document']) if (k in saved) globalThis[k] = saved[k]; else delete globalThis[k]; }
 });
 
+test('a drawing snapshot queues new strokes instead of painting them finished, and a repeat does not draw them twice', () => {
+  const node = () => ({ style: { setProperty() {} }, classList: { toggle() {}, remove() {} }, dataset: {}, hidden: false, clientWidth: 1000, clientHeight: 562, addEventListener() {}, querySelector: () => node() });
+  const ctx = new Proxy({}, { get: (t, k) => k === 'measureText' ? s => ({ width: String(s).length * 10 }) : k in t ? t[k] : () => ({}), set: (t, k, v) => { t[k] = v; return true; } });
+  const saved = { ...globalThis };
+  Object.assign(globalThis, { window: { devicePixelRatio: 1 }, ResizeObserver: class { observe() {} }, document: { visibilityState: 'visible', addEventListener() {}, createElement: () => ({ getContext: () => ctx }) }, requestAnimationFrame: () => 1, cancelAnimationFrame() {} });
+  try {
+    const root = node(); root.querySelector = sel => Object.assign(node(), sel === 'canvas' ? { getContext: () => ctx } : {});
+    const view = new SketchBoardView(root, { onChange() { view.setView('full'); } });
+    const hero = { id: 'hero', t: 'rect', x: 80, y: 80, w: 120, h: 60, fill: 'hatch' };
+    view.receive({ op: 'snapshot', n: 2, state: { w: 1000, h: 562, phase: 'drawing', round: 1, items: [hero] } });
+    assert.equal(view.live, true);
+    assert.equal(view.view, 'full');
+    assert.equal(view.items.length, 0, 'the pencil has not finished the stroke yet');
+    assert.equal(view.queue.filter(op => op.op === 'add').length, 1);
+    view.receive({ op: 'snapshot', n: 2, state: { w: 1000, h: 562, phase: 'drawing', round: 1, items: [hero] } });
+    assert.equal(view.queue.filter(op => op.op === 'add').length, 1, 'the same snapshot must not queue the stroke again');
+    view.receive({ op: 'add', n: 3, item: hero });
+    assert.equal(view.queue.filter(op => op.op === 'add').length, 1, 'a live stroke already taken from the snapshot is skipped');
+    view.receive({ op: 'snapshot', n: 1, state: { w: 1000, h: 562, phase: 'drawing', items: [] } });
+    assert.equal(view.state.round, 1, 'an older snapshot cannot rewind the board');
+  } finally { for (const k of ['window', 'ResizeObserver', 'document', 'requestAnimationFrame', 'cancelAnimationFrame']) if (k in saved) globalThis[k] = saved[k]; else delete globalThis[k]; }
+});
+
 test('hatching is clipped to the polygon', () => {
   const lines = hatch([0, 0, 50, 0, 50, 50, 0, 50], rng(1));
   assert.ok(lines.length > 5);

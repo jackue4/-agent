@@ -4,16 +4,19 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { Readable, Writable } from 'node:stream';
-import { emptyGame } from '../engine.mjs';
-import { MODEL_OPTIONS, MODEL_SETTINGS } from '../model-config.mjs';
-import { runProjectBuilder } from '../gpagent.mjs';
-import { runBuilder } from '../codegen.mjs';
-import { defaultRunWorker } from '../task-team.mjs';
 
 // Exercise the actual HTTP handler/storage and orchestration, but never a network model call.
+// Switching between models needs the full catalogue, whatever the operator's local config locks.
 const data = fs.mkdtempSync(path.join(os.tmpdir(), 'ugc-project-model-'));
+fs.writeFileSync(path.join(data, 'model-config.json'), '{}');
+process.env.UGC_MODEL_CONFIG = path.join(data, 'model-config.json');
 process.env.UGC_DATA_DIR = data;
 process.env.UGC_ENGINE = 'classic';
+const { emptyGame } = await import('../engine.mjs');
+const { MODEL_OPTIONS, MODEL_SETTINGS } = await import('../model-config.mjs');
+const { runProjectBuilder } = await import('../gpagent.mjs');
+const { runBuilder } = await import('../codegen.mjs');
+const { defaultRunWorker } = await import('../task-team.mjs');
 const originalFetch = globalThis.fetch;
 globalThis.fetch = async () => assert.fail('project-model tests must never call a real network service');
 const api = await import('../server.mjs');

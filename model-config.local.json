@@ -1,4 +1,5 @@
 {
-  "model": "kimi-k3.1-pro-highspeed",
-  "codeModel": "kimi-k3.1-pro-highspeed"
+  "model": "deepseek-v4.1-flash",
+  "codeModel": "deepseek-v4.1-flash",
+  "models": ["deepseek-v4.1-flash"]
 }

@@ -64,6 +64,9 @@ export function paintModelSelection(state, select, note, retry, escape) {
   const html = view.options.map(row => '<option value="' + escape(row.id) + '"' + (row.disabled ? ' disabled' : '') + '>' + escape(row.label) + '</option>').join('');
   if (select.innerHTML !== html) select.innerHTML = html;
   select.value = view.value; select.disabled = view.disabled;
+  // A platform that offers a single model has nothing to choose; the picker disappears.
+  const field = select.closest?.('.model-option, label, .field') || select;
+  if (field.style) field.style.display = state.loaded && state.models.length <= 1 ? 'none' : '';
   note.textContent = view.note; note.hidden = !view.note; note.dataset.state = view.error ? 'error' : 'normal';
   retry.hidden = !view.retry;
 }

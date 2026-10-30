@@ -1,18 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_MODEL, MODEL_OPTIONS, MODEL_SETTINGS, assertModelSelection, resolveModelSelection, loadModelConfig } from '../model-config.mjs';
+import { DEFAULT_MODEL, MODEL_CATALOG, MODEL_OPTIONS, MODEL_SETTINGS, assertModelSelection, resolveModelSelection, loadModelConfig } from '../model-config.mjs';
 import { messagesForModel } from '../message-adapter.mjs';
 
 const config = (local, env = {}) => loadModelConfig({ env, configPath: '/fixture/model.json', readFile: () => JSON.stringify(local) });
 
-test('public options are the verified gateway IDs and cannot be mutated', () => {
-  assert.deepEqual(MODEL_OPTIONS.map(row => row.id), [
+test('the catalogue holds the verified gateway IDs; public options are the configured subset and cannot be mutated', () => {
+  assert.deepEqual(MODEL_CATALOG.map(row => row.id), [
     'claude-opus-5-5', 'claude-opus-5', 'claude-opus-4-8', 'claude-sonnet-5-5',
     'gpt-6.1-sol', 'gpt-6.1-terra', 'gpt-6-sol', 'gpt-6-luna', 'gpt-6-astra',
     'gpt-5.6-sol', 'gpt-5.6-luna', 'gpt-5.6-terra', 'gpt-5.5', 'gpt-5.4-pro', 'gpt-5.4', 'gpt-5.4-mini', 'gpt-5.4-nano', 'gpt-5.2',
     'deepseek-v4.1-flash', 'kimi-k3.1-pro-highspeed',
   ]);
-  assert.ok(Object.isFrozen(MODEL_OPTIONS));
+  assert.deepEqual(MODEL_OPTIONS.map(row => row.id), MODEL_SETTINGS.models ? MODEL_CATALOG.map(row => row.id).filter(id => MODEL_SETTINGS.models.includes(id)) : MODEL_CATALOG.map(row => row.id));
+  assert.ok(Object.isFrozen(MODEL_CATALOG) && Object.isFrozen(MODEL_OPTIONS));
   for (const row of MODEL_OPTIONS) {
     assert.ok(Object.isFrozen(row));
     assert.ok(row.label.length > 0);
@@ -22,15 +23,28 @@ test('public options are the verified gateway IDs and cannot be mutated', () => 
 
 test('explicit project selection rejects unknown IDs, aliases, blanks and non-strings', () => {
   for (const value of [undefined, null, '', 'Sonnet 5.5', 'deepseek', ' gpt-6.1-sol', 'kimi-k3.1-pro', {}, 1]) assert.throws(() => assertModelSelection(value), /有效模型/);
-  assert.throws(() => resolveModelSelection(''), /有效模型/);
-  assert.throws(() => resolveModelSelection('unlisted-custom'), /有效模型/);
+  assert.throws(() => resolveModelSelection('', { locked: false }), /有效模型/);
+  assert.throws(() => resolveModelSelection('unlisted-custom', { locked: false }), /有效模型/);
+});
+
+test('a models list limits the choice; stored choices outside it run on the default', () => {
+  const r = config({ model: 'deepseek-v4.1-flash', codeModel: 'deepseek-v4.1-flash', models: ['deepseek-v4.1-flash', 'deepseek-v4.1-flash'] });
+  assert.deepEqual(r.models, ['deepseek-v4.1-flash']);
+  assert.ok(Object.isFrozen(r.models));
+  assert.equal(config({}).models, null, 'no list means the full catalogue');
+  for (const models of [[], 'deepseek-v4.1-flash', ['not-in-catalogue']]) assert.throws(() => config({ models }), /models/);
+  assert.throws(() => config({ model: 'kimi-k3.1-pro-highspeed', models: ['deepseek-v4.1-flash'] }), /models 列表/);
+  assert.throws(() => config({ models: ['deepseek-v4.1-flash'] }, { UGC_CODE_MODEL: 'gpt-5.5', UGC_MODEL: 'deepseek-v4.1-flash' }), /models 列表/);
+  const allowed = MODEL_OPTIONS[0].id;
+  assert.equal(resolveModelSelection('not-offered', { defaultModel: allowed, locked: true }), allowed);
+  assert.equal(resolveModelSelection(allowed, { defaultModel: 'other', locked: true }), allowed);
 });
 
 test('missing legacy selection preserves the configured default without a hidden model fallback', () => {
   assert.equal(resolveModelSelection(undefined), MODEL_SETTINGS.codeModel);
   assert.equal(resolveModelSelection(null), MODEL_SETTINGS.codeModel);
   assert.equal(resolveModelSelection(undefined, { defaultModel: 'admin-private-model' }), 'admin-private-model');
-  assert.equal(resolveModelSelection('gpt-6.1-sol', { defaultModel: 'admin-private-model' }), 'gpt-6.1-sol');
+  assert.equal(resolveModelSelection(MODEL_OPTIONS[0].id, { defaultModel: 'admin-private-model' }), MODEL_OPTIONS[0].id);
   assert.throws(() => resolveModelSelection(undefined, { defaultModel: '' }), /默认模型配置无效/);
 });
 

@@ -84,8 +84,11 @@ svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-wi
 .sel-chip{display:flex;align-items:center;gap:8px;margin:0 0 6px;padding:5px 10px;color:#b1cede;font-size:12px}
 .sel-chip button{margin-left:auto;color:var(--dim)}
 body.playing .composer,body.playing .feed{display:none!important}
-/* Preview shows only the game; the composer and status line live in Chat. */
-body.ed:not(.chat-view) .composer,body.ed:not(.chat-view) .scene-toolbar,body.ed:not(.chat-view) #constructionStatus{display:none!important}
+/* Preview shows only the game; the composer and status line live in Chat. A collapsed sketch keeps
+   a small floating pencil button, otherwise it could never be reopened from Preview. */
+body.ed:not(.chat-view) .composer,body.ed:not(.chat-view) #constructionStatus,body.ed:not(.chat-view) .scene-toolbar>:not(#sketchBtn),body.ed:not(.chat-view) #sketchBtn[aria-pressed=true]{display:none!important}
+body.ed:not(.chat-view) .scene-toolbar{position:relative;height:0;min-height:0;padding:0;z-index:12}
+body.ed:not(.chat-view) #sketchBtn{position:absolute;top:10px;right:10px;box-shadow:0 4px 14px #0006}
 body.playing .stage{margin-bottom:env(safe-area-inset-bottom)}
 button:focus-visible,a:focus-visible,input:focus-visible,.msgs:focus-visible{outline:2px solid #91dfff;outline-offset:2px}
 .cbar textarea:focus-visible{outline:none}

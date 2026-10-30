@@ -743,7 +743,7 @@ function handle(ev) {
     case 'turn_start':
       if (typeof ev.model === 'string' && proj) proj.model = ev.model;
       if (ev.engine === 'godot' && proj) proj.game.meta.engine = 'godot';
-      syncParticipationDelivery(ev.engine); setRunning(true); break;
+      syncParticipationDelivery(ev.engine); setRunning(true, { reveal: true }); break;
     case 'tool_start': endStream(); break;
     case 'text':
       // A different agent may still be streaming while this agent is in the snapshot.
@@ -813,9 +813,12 @@ function handle(ev) {
   if (mode === 'edit' && hasBuildStage() && ['design', 'turn_start'].includes(ev.type)) gpShow();
   if (activity || ['ops', 'turn_end', 'design', 'plan', 'roadmap'].includes(ev.type)) renderWorkflow();
 }
-function setRunning(value) {
+function setRunning(value, { reveal = false } = {}) {
   if (!value) clearWritingProgress();
+  // The live pencil sketch is only visible in Preview; a round starting on this page brings it forward once.
+  const starting = value && !running;
   running = value; $('#stopBtn').hidden = !value; $('#stopBtn').disabled = false;
+  if (reveal && starting && !feed.hidden) setChat(false, false);
   $('#iterationTier').disabled = value;
   renderWorkflow();
   browserTests.sync();
@@ -877,7 +880,7 @@ async function send() {
   const text = input.value.trim(); if (!text || !proj || composing || participationPending) return;
   if (running || participationAttempt?.key === JSON.stringify([text, focusedModule?.file || ''])) return submitParticipation(text);
   if (modelSelection.pending) { toast('模型选择正在保存，请稍候'); return; }
-  input.value = ''; resizeInput(); endStream(); addUser(text); setRunning(true);
+  input.value = ''; resizeInput(); endStream(); addUser(text); setRunning(true, { reveal: true });
   try {
     const selected = focusedModule ? focusedModule.label + '（模块文件 ' + focusedModule.file + '）' : sceneSelection ? (sceneSelection.label || sceneSelection.id) + '（场景 id=' + sceneSelection.id + '）' : selection ? (selection === '__player' ? '主角' : (proj.game.entities[selection]?.name || selection) + '（id=' + selection + '）') : '';
     await api('/projects/' + pid + '/chat', { body: { text, dimension: qs.get('dim') || proj.game.meta.dimension, selection: selected, iteration: iterationRequest($('#iterationTier').value) } });

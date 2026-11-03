@@ -1,0 +1,5 @@
+.godot/
+build/
+tests/*.log
+*.pid
+tests/*pid.txt

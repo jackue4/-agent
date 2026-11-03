@@ -131,6 +131,7 @@ test('scaffold and final managed scene refer to the same canonical JSON, not a s
   assert.match(project.read('scenes/construction.tscn'), /source_path = "res:\/\/scenes\/construction\.json"/);
   assert.match(project.read('scenes/construction.tscn'), /res:\/\/addons\/ugc\/construction_scene\.gd/);
   assert.match(constructionScaffold(state)['main.gd'], /Camera3D\.new/);
+  assert.match(constructionScaffold(state)['main.gd'], /if view\.y > view\.x:\n\t\tcamera\.keep_aspect = Camera3D\.KEEP_WIDTH/);
 });
 
 test('later scene batches do not replace already-written gameplay scripts or their entry scene', t => {

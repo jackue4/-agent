@@ -7,39 +7,39 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#080e1
 .pl{position:relative;isolation:isolate;height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .pl::before{content:'';position:absolute;z-index:-2;inset:0;background:linear-gradient(#080e17a3,#080e17dd),url('/visuals/studio-atmosphere.png') center/cover;pointer-events:none}
 .pbg{position:absolute;z-index:-1;inset:-40px;background:transparent center/cover;filter:blur(42px) brightness(.2) saturate(.55);opacity:.65}
-.pstage{position:relative;width:var(--w,100vw);height:var(--h,56vw);background:#080e17;overflow:hidden;box-shadow:0 0 0 1px #c4e9ff1c,0 24px 90px #0006;border-radius:12px}
+.pstage{position:relative;width:100%;height:100%;background:#080e17;overflow:hidden;border-radius:0}
 .pstage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .loading{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:14px;background:radial-gradient(ellipse at center,#18314866,transparent 70%),#080e17;color:#91abc0;font-size:12px;letter-spacing:.6px}
 .loading img{width:88px;height:88px;object-fit:contain;filter:drop-shadow(0 10px 22px #56bddb1f)}
 .spin{width:22px;height:22px;border-radius:50%;border:1.5px solid #b4d6ee1c;border-top-color:#7bdfff;animation:sp .9s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
-.ptop{position:absolute;z-index:3;left:0;right:0;top:0;display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top) + 14px) max(18px,env(safe-area-inset-right)) 24px max(18px,env(safe-area-inset-left));background:linear-gradient(#07111bc7,#07111b00);transition:opacity .3s}
-.ptop h1{flex:1;min-width:0;margin:0 0 0 3px;font-size:14px;font-weight:550;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 8px #0008}
-.ib{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;color:#d5e8f6;background:linear-gradient(145deg,#b4d6ee13,#0d1c2b87);border:1px solid #c4e9ff26;box-shadow:inset 0 1px #ffffff08;backdrop-filter:blur(16px);transition:background .18s,border-color .18s}
+.ptop{position:absolute;z-index:3;left:0;right:0;top:0;display:flex;align-items:center;pointer-events:none}
+.ib{min-height:40px;padding:10px 14px;border-radius:30px;display:inline-flex;align-items:center;gap:5px;color:#f7f7fa;background:#101014e6;border:1px solid #fff3;font-size:11px;backdrop-filter:blur(16px);pointer-events:auto}
 .ib:hover{background:#7bdfff22;border-color:#7bdfff55}.ib .ui-icon{width:18px;height:18px}
-.pbar{position:absolute;z-index:3;left:0;right:0;bottom:0;padding:28px max(18px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 16px) max(18px,env(safe-area-inset-left));display:flex;gap:8px;align-items:center;background:linear-gradient(#07111b00,#07111bd9);transition:opacity .3s}
-.pbar .info{flex:1;min-width:0;font-size:11px;color:#9eb8cd}.pbar .info b{display:block;font-size:12px;font-weight:500;color:#d5e6f4;margin-bottom:4px}.pbar .info span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85}.pbar .btn{padding:9px 12px;font-size:12px;backdrop-filter:blur(18px)}.pbar .btn:not(.pri){background:#122638b3}.pbar .btn .ui-icon{width:16px;height:16px}
-body.immersive .ptop,body.immersive .pbar{opacity:0;pointer-events:none}
-body.embedded .ptop,body.embedded .pbar,body.embedded .rot{display:none!important}
-.pl{max-width:440px;margin:auto;background:#101014;overflow:hidden}
-.rot{position:absolute;z-index:4;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 83px);padding:8px 13px;border-radius:10px;background:#0d2133d9;border:1px solid #b4d6ee26;font-size:11px;color:#b8d8ea;white-space:nowrap;backdrop-filter:blur(18px);display:flex;align-items:center;gap:7px;box-shadow:0 6px 24px #0003}.rot .ui-icon{width:15px;height:15px}
-@media(max-width:600px){.pstage{border-radius:0}.ptop{padding-left:12px;padding-right:12px;gap:8px}.pbar{padding-left:13px;padding-right:13px}.pbar .btn{padding:9px 10px}.ptop h1{font-size:13px}}
+body.embedded .ptop{display:none!important}
+html:has(body.embedded){height:100%;overflow:hidden}
+body.embedded{height:100%;overflow:hidden}
+body.embedded .pl{max-width:none;width:100%;height:100%;min-height:100%}
+body.embedded .pstage{border-radius:0;box-shadow:none}
+.pl,body.embedded .pl{position:fixed;left:50%;top:50%;width:var(--play-width,100vw);height:var(--play-height,100dvh);min-height:0;max-width:none;margin:0;transform:translate(-50%,-50%) rotate(var(--play-rotation,0deg));background:#101014;overflow:hidden}
+.ptop{pointer-events:none}.ptop .ib{pointer-events:auto}
+.ptop .back{margin-right:auto}
+.pl[data-rotation="90"]{--safe-top:env(safe-area-inset-left);--safe-left:env(safe-area-inset-bottom);--safe-right:env(safe-area-inset-top);--safe-bottom:env(safe-area-inset-right)}
+.pl[data-rotation="-90"]{--safe-top:env(safe-area-inset-right);--safe-left:env(safe-area-inset-top);--safe-right:env(safe-area-inset-bottom);--safe-bottom:env(safe-area-inset-left)}
+.ptop{padding-top:calc(var(--safe-top,env(safe-area-inset-top)) + 10px);padding-left:max(12px,var(--safe-left,env(safe-area-inset-left)));padding-right:max(12px,var(--safe-right,env(safe-area-inset-right)))}
 @media(prefers-reduced-motion:reduce){.spin{animation-duration:2s}}
 </style></head><body>
 <div class="pl">
   <div class="pbg" id="pbg"></div>
-  <div class="ptop"><a class="ib back" href="/" aria-label="返回"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg></a><h1 id="t">…</h1><button class="ib" id="restart" aria-label="重新开始"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10a8 8 0 1 1 1.8 7M4 4v6h6"/></svg></button><button class="ib" id="fs" aria-label="全屏"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5"/></svg></button></div>
-  <div class="pstage" id="stage"><iframe id="rt" title="游戏画面" src="/game/index.html" allow="autoplay; fullscreen"></iframe><div class="loading" id="ld"><img src="/visuals/ai-robot.png" alt="" width="88" height="88"><div class="spin"></div><div>正在打开游戏…</div></div></div>
-  <div class="rot" id="rot" hidden><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="3" width="8" height="18" rx="2" transform="rotate(-35 12 12)"/><path d="M3 8V4h4m14 12v4h-4"/></svg>横过手机玩，画面更大</div>
-  <div class="pbar"><div class="info"><b id="au"></b><span id="pitch"></span></div><button class="btn" id="like" aria-label="喜欢这个游戏"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg><span id="likes">0</span></button><button class="btn pri" id="remix"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h12l-3-3m3 3-3 3M20 17H8l3 3m-3-3 3-3M4 7v6m16 4v-6"/></svg>改编</button></div>
+  <div class="ptop"><a class="ib back" href="/" aria-label="退出返回主页"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg><span>退出返回</span></a></div>
+  <div class="pstage" id="stage"><iframe id="rt" title="游戏画面" src="/game/index.html" allow="autoplay; fullscreen" allowfullscreen></iframe><div class="loading" id="ld"><img src="/visuals/ai-robot.png" alt="" width="88" height="88"><div class="spin"></div><div>正在打开游戏…</div></div></div>
 </div>
 <script type="module">
 import { $, api, Runtime } from '/common.js';
 import { rememberPlayed } from '/platform-ui.js';
-import { openCreate } from '/create-flow.js';
+import { gameOrientation, applyGameViewport } from '/game-viewport.js';
 const id = new URLSearchParams(location.search).get('id');
 const embedded = new URLSearchParams(location.search).get('embed') === '1';
 if (embedded) document.body.classList.add('embedded');
-for (const href of ['/home.css', '/create-flow.css']) { const link = document.createElement('link'); link.rel = 'stylesheet'; link.href = href; document.head.append(link); }
 let g = null, counted = false;
 const rt = new Runtime($('#rt'), ev => { if (ev.type === 'ready') { $('#ld').hidden = true; if (g && !g.pck) start(); } });
 // Godot-project games: the shared engine runs the published pack; restarting reloads the page.
@@ -49,36 +49,30 @@ function start(card = true) {
   setTimeout(() => rt.focus(), 200);
   if (!counted) { counted = true; api('/games/' + id + '/play', { body: {} }); }
 }
-const por = () => g?.orientation === 'portrait';
-/** Largest frame with the game's aspect that fits the screen (letterboxed over a blurred cover). */
 function fit() {
-  const W = Math.min(440, innerWidth), H = innerHeight, r = por() ? 9 / 16 : 16 / 9;
-  const immersive = !!document.fullscreenElement || (!por() && W > H && H < 520);
-  // Keep platform controls outside the playable frame: game HUDs own its edges.
-  const frameH = immersive || embedded ? H : Math.max(180, H - 128);
-  let w = W, h = W / r; if (h > frameH) { h = frameH; w = frameH * r; }
-  // a portrait screen narrower than the game's aspect: let the game fill it (stretch mode expands)
-  if (por() && W / frameH < r) { w = W; h = frameH; }
-  $('#stage').style.setProperty('--w', Math.floor(w) + 'px'); $('#stage').style.setProperty('--h', Math.floor(h) + 'px');
-  $('#rot').hidden = por() || W > H || !matchMedia('(pointer:coarse)').matches;
-  document.body.classList.toggle('immersive', immersive);
+  applyGameViewport($('.pl'), gameOrientation(g || {}), { embedded });
 }
 addEventListener('resize', fit);
 addEventListener('fullscreenchange', fit);
+addEventListener('webkitfullscreenchange', fit);
+screen.orientation?.addEventListener?.('change', fit);
+window.visualViewport?.addEventListener('resize', fit);
+fit();
 (async () => {
-  g = await api('/games/' + id);
+  try { g = await api('/games/' + id); }
+  catch (err) {
+    const project = await api('/projects/' + id).catch(() => null);
+    const meta = project?.game?.meta;
+    if (!project?.pck || !meta) throw err;
+    g = { id, title: meta.title, pitch: meta.pitch || '', author: '造梦玩家', plays: 0, likes: 0, cover: '', orientation: meta.orientation || 'landscape', dimension: meta.dimension, spec: project.game, pck: project.pck };
+  }
   rememberPlayed({ ...g, id });
   document.title = g.title + ' · 造梦';
-  $('#t').textContent = g.title; $('#pitch').textContent = g.pitch || '';
-  $('#au').textContent = '@' + (g.author || '造梦玩家') + ' · ▶ ' + g.plays;
-  $('#likes').textContent = g.likes;
   if (g.cover) $('#pbg').style.backgroundImage = 'url(' + g.cover + ')';
   fit();
+  if (embedded) parent.postMessage({ type: 'dream-play-orientation', orientation: gameOrientation(g) }, location.origin);
   if (g.pck || rt.ready) start();
 })();
-$('#restart').onclick = () => start(false);
-$('#like').onclick = async () => { const r = await api('/games/' + id + '/like', { body: {} }); $('#likes').textContent = r.likes; };
-$('#fs').onclick = async () => { try { await document.documentElement.requestFullscreen?.(); await screen.orientation?.lock?.(por() ? 'portrait' : 'landscape'); } catch {} fit(); rt.focus(); };
-$('#remix').onclick = () => { if (g) openCreate({ remix: { ...g, id } }); };
+addEventListener('pagehide', () => { if (!embedded) { try { screen.orientation?.unlock?.(); } catch {} } });
 </script></body></html>
 

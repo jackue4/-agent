@@ -292,7 +292,9 @@ func orbit(relative: Vector2) -> void:
 func pan(relative: Vector2) -> void:
 	claim_camera()
 	var camera: Camera3D = yard.camera
-	var units := _distance * tan(deg_to_rad(camera.fov) * 0.5) * 2.0 / maxf(1.0, get_viewport().get_visible_rect().size.y)
+	var view := get_viewport().get_visible_rect().size
+	var span := view.x if camera.keep_aspect == Camera3D.KEEP_WIDTH else view.y
+	var units := _distance * tan(deg_to_rad(camera.fov) * 0.5) * 2.0 / maxf(1.0, span)
 	_pivot += (-camera.global_basis.x * relative.x + camera.global_basis.y * relative.y) * units
 	_update_camera()
 

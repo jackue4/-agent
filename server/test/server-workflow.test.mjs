@@ -320,6 +320,19 @@ test('round target is initialized before execution and bounded client options re
   assert.equal(p.workflow.iteration.phase, 'paused'); assert.ok(p.workflow.iteration.endedAt);
 });
 
+test('a prompt brief reaches the builder without replacing the user message', async () => {
+  const { p } = project();
+  let seen = '';
+  await api.runCodeChat(p, '做一个能跳的小人', {}, {
+    live: { stop() {} },
+    enhancePrompt: async () => '【制作简报】\n目标：能跳',
+    runProjectBuilder: async args => { seen = args.userText; return { session: { changed: new Set(), finish: null }, out: { done: true } }; },
+  });
+  assert.match(seen, /^做一个能跳的小人\n\n【制作简报】/);
+  assert.equal(p.chat[0].text, '做一个能跳的小人');
+  assert.equal(p.workflow.goal, '做一个能跳的小人');
+});
+
 test('budget expiry is saved as partial with next steps, never as user stop or completion', async () => {
   const { p } = project();
   await api.runCodeChat(p, '首轮 Demo', {}, { live: { stop() {} }, runProjectBuilder: async args => {
@@ -364,6 +377,34 @@ test('asset ready is emitted only after actual project import resolves', async (
   await api.applyGeneratedAsset(p, asset, { url: '/assets/test.png' }, { apply: async () => { assert.equal(asset.state, 'importing'); imported = true; } });
   assert.equal(imported, true); assert.equal(asset.state, 'ready');
   assert.equal(p.log.at(-1).state, 'ready');
+});
+
+test('hot feed leads with the editorial six and opens the playable draft in that slot', async () => {
+  const publish = (title, plays) => {
+    const { p } = project();
+    p.game.meta.title = title;
+    p.published = { game: structuredClone(p.game), cover: '/covers/x.jpg', author: '我', plays, likes: 0, t: plays, pck: true };
+    return p;
+  };
+  publish('羊了个羊', 50);
+  publish('小丑牌', 40);
+  publish('月下花灯消消乐', 90);
+  publish('僵尸危机3·平台协作版', 10);
+  publish('星刃：回收协议', 1);
+  publish('火柴人大乱斗 StickBonk', 2);
+  publish('夜市戏法牌', 80);
+  const { p: jump, gp } = project();
+  jump.game.meta.title = '跳一跳 3D';
+  buildFixture(jump, gp);
+  const titles = (await request('/api/feed?sort=hot')).json().map(g => g.title);
+  const wanted = ['火柴人大乱斗 StickBonk', '星刃：回收协议', '跳一跳 3D', '僵尸危机3·平台协作版', '月下花灯消消乐', '羊了个羊', '小丑牌'];
+  assert.deepEqual(titles.filter(title => wanted.includes(title)).slice(0, 7), wanted);
+  assert.ok(titles.indexOf('夜市戏法牌') > titles.indexOf('小丑牌'));
+  const opened = await request('/api/games/' + jump.id);
+  assert.equal(opened.statusCode, 200);
+  assert.match(opened.json().pck, /\/game\.pck\?build=/);
+  const newest = (await request('/api/feed?sort=new')).json().map(g => g.title);
+  assert.equal(newest.includes('跳一跳 3D'), false);
 });
 
 test('asset retry cannot escape an active creation round and stop cancels owned retries', async () => {

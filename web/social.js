@@ -53,8 +53,7 @@ export function mountSocial(root, { profile = {} } = {}) {
   if (!root) throw new Error('Missing social root');
   let chats = readState(), active = null, section = 'messages', query = '', persistOK = true;
   root.classList.add('social-root');
-  root.innerHTML = '<header class="social-heading"><div><span class="social-eyebrow">BETTER TOGETHER</span><h1>好玩的，一起分享。</h1><p>和同频的人，聊灵感，也聊日常。</p></div><span class="social-demo">本机演示</span></header>'
-    + '<div class="social-workspace"><aside class="social-sidebar" aria-label="会话列表">'
+  root.innerHTML = '<div class="social-workspace"><aside class="social-sidebar" aria-label="会话列表">'
     + '<div class="social-list-heading"><h2>聊天<span class="social-unread-total"></span></h2><button class="social-icon-button social-new" aria-label="新建示例聊天" title="新建示例聊天">' + svg('plus') + '</button></div>'
     + '<div class="social-tabs" role="tablist" aria-label="社交分类"><button type="button" role="tab" id="socialMessagesTab" aria-controls="socialContactList" data-section="messages" aria-selected="true">消息</button><button type="button" role="tab" id="socialFriendsTab" aria-controls="socialContactList" data-section="friends" aria-selected="false">好友</button></div>'
     + '<label class="social-search">' + svg('search') + '<input type="search" placeholder="搜索名字或聊天内容" aria-label="搜索聊天" autocomplete="off"></label>'

@@ -71,22 +71,34 @@ svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-wi
 .chat-toggle img{display:block;object-fit:contain;filter:drop-shadow(0 2px 5px #7bdfff20);transition:transform .18s}
 .chat-toggle:hover img{transform:translateY(-1px)}
 .chat-toggle[data-unread=true]::after{content:'';position:absolute;top:3px;right:2px;width:5px;height:5px;border-radius:50%;background:#8fe8ff;box-shadow:0 0 0 2px #132333,0 0 8px #7bdfff70}
-.cbar textarea{flex:1;min-width:0;resize:none;background:transparent;border:0;outline:0;padding:8px 2px;line-height:20px;max-height:96px;font-size:14px;scrollbar-width:thin}
+.cbar textarea{flex:1;min-width:0;box-sizing:border-box;resize:none;overflow:hidden;scrollbar-width:none;background:transparent;border:0;outline:0;padding:8px 2px;line-height:22px;min-height:60px;max-height:88px;font-size:14px}
+.cbar textarea::-webkit-scrollbar{display:none;width:0;height:0}
 .cbar textarea::placeholder{color:#8ba1b7}
 .send{display:grid;place-items:center;flex:none;width:36px;height:36px;padding:8px;border-radius:12px;background:linear-gradient(145deg,#dbf6ff,#80cce8);color:#123447;box-shadow:inset 0 1px #ffffff80,0 3px 12px #58b9db14;transition:background .15s,box-shadow .15s}
 .send:hover{background:linear-gradient(145deg,#edfaff,#9fe1f8);box-shadow:inset 0 1px #fff,0 3px 16px #58b9db28}
 .send:disabled{background:#b9d2e20b;color:#6e859a;box-shadow:inset 0 0 0 1px #b9d2e210;cursor:default}
 .send.stop{background:#b9d2e214;color:#d4ebfa;box-shadow:inset 0 0 0 1px #b9d2e21a}
-.send.send-advice{width:auto;min-width:72px;padding:8px 10px;font-size:12px;white-space:nowrap}.send-advice svg{display:none}.send:not(.send-advice) #sendLabel{display:none}
+.send.send-advice{width:auto;min-width:96px;height:40px;padding:0 16px;border-radius:12px;font-size:14px;font-weight:650;line-height:40px;white-space:nowrap}.send-advice svg{display:none}.send:not(.send-advice) #sendLabel{display:none}
 .module-focus{margin:0 5px 7px;padding:7px 10px;border:1px solid #a8dff124;border-radius:12px;background:#17354866;font-size:11px;color:#bfddea}.module-focus>div:first-child{display:flex;align-items:center;gap:8px}.module-focus>div:first-child span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.module-focus button{background:transparent;color:inherit}.module-focus #moduleFocusClear{font-size:17px;line-height:20px;padding:0 3px}.module-suggestions{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}.module-suggestions button{padding:3px 7px;border:1px solid #a8dff122;border-radius:7px;font-size:10px}.module-suggestions button:hover{background:#a8dff116}
 .participation-status{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:6px 5px 0;font-size:10px;color:#91acbf}.participation-status>span{min-width:0;overflow-wrap:anywhere}.participation-status [data-state=error]{color:#ffc0ad}.participation-status details{position:relative;flex:none}.participation-status summary{cursor:pointer;white-space:nowrap}.participation-status details[open]{position:absolute;bottom:calc(100% - 6px);right:12px;width:min(340px,calc(100% - 24px));max-height:240px;overflow:auto;padding:10px 12px;border:1px solid #a8dff133;border-radius:12px;background:#102231;box-shadow:0 10px 35px #0005;z-index:4}.composer{position:relative}.participation-status ul{list-style:none;margin:8px 0;padding:0}.participation-status li{padding:6px 0;border-top:1px solid #a8dff114}.participation-status li span{color:#b9e3f1}.participation-status li p{margin:3px 0;white-space:pre-wrap;overflow-wrap:anywhere}.participation-status details small{font-size:10px;color:#839db0}
 .stop svg rect{fill:currentColor;stroke:none}
 .sel-chip{display:flex;align-items:center;gap:8px;margin:0 0 6px;padding:5px 10px;color:#b1cede;font-size:12px}
 .sel-chip button{margin-left:auto;color:var(--dim)}
-body.playing .composer,body.playing .feed{display:none!important}
-/* Preview shows only the game; the composer and status line live in Chat. A collapsed sketch keeps
-   a small floating pencil button, otherwise it could never be reopened from Preview. */
-body.ed:not(.chat-view) .composer,body.ed:not(.chat-view) #constructionStatus,body.ed:not(.chat-view) .scene-toolbar>:not(#sketchBtn),body.ed:not(.chat-view) #sketchBtn[aria-pressed=true]{display:none!important}
+body.playing .feed{display:none!important}
+/* Preview keeps a request bar under the game. The old observe/play switch is gone so the
+   picture can use that space. A collapsed sketch keeps a small floating pencil button. */
+.preview-modes{display:none!important}
+body.ed:not(.chat-view) #constructionStatus,body.ed:not(.chat-view) .scene-toolbar>:not(#sketchBtn),body.ed:not(.chat-view) #sketchBtn[aria-pressed=true]{display:none!important}
+body.ed:not(.chat-view) .iteration-options,body.ed:not(.chat-view) .chat-toggle{display:none!important}
+.voice{display:grid;place-items:center;flex:none;width:36px;height:36px;padding:0;border-radius:12px;color:#c5d7e4;background:transparent}
+.voice svg{width:18px;height:18px}
+.preview-play{position:absolute;left:12px;bottom:12px;z-index:6;width:64px;height:64px;padding:0;border:0;border-radius:0;background:transparent;cursor:pointer}
+.preview-play img{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;pointer-events:none}
+.preview-play .icon-pause{display:none}
+.preview-play[aria-pressed=true] .icon-play{display:none}
+.preview-play[aria-pressed=true] .icon-pause{display:block}
+.voice[aria-pressed=true]{color:#ffb4b4;background:#f8717122;box-shadow:0 0 0 4px #f8717114}
+.voice:disabled{opacity:.35}
 body.ed:not(.chat-view) .scene-toolbar{position:relative;height:0;min-height:0;padding:0;z-index:12}
 body.ed:not(.chat-view) #sketchBtn{position:absolute;top:10px;right:10px;box-shadow:0 4px 14px #0006}
 body.playing .stage{margin-bottom:env(safe-area-inset-bottom)}

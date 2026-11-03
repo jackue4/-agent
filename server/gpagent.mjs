@@ -87,13 +87,14 @@ export const GP_SYSTEM = [
   '- 结果：UGC.win(final_score := -1) / UGC.lose(final_score := -1) 上报胜负（游戏自己的结算界面照常做）；UGC.add_score(n)；UGC.result；UGC.score。',
   '- 测试与试玩：UGC.click_at(pos) / UGC.click(node) 模拟点击（Control 点中心，Node2D 点它的屏幕位置）；await UGC.drag(a, b, secs)；await UGC.press("action", secs) 按住输入动作；UGC.hold("action", true/false)；await UGC.key(KEY_SPACE, secs)；await UGC.wait(secs)；UGC.check(ok, "说明") 记一条断言；UGC.describe(root := 主场景, depth := 3) -> 节点树（路径、类型、屏幕矩形 rect、2D 屏幕坐标 screen、3D 坐标 pos3、可见性、文字）；UGC.toast(text)。',
   '',
-  '# 美术：铅笔手绘稿 → 正式美术（同一套代码）',
+  '# 美术：全程铅笔手绘（同一套代码，用户要求时才换成正式美术）',
   '- 所有画面都用平台铅笔工具包画，并且每个视觉元素都是一个「美术位」：const Pencil = preload("res://addons/ugc/pencil.gd")。它和用户刚看到的草图板是同一种纸张、线条和配色，Demo 就像草图活了过来。',
   '- 2D：背景 add_child(Pencil.backdrop("background"))（没有美术时是纸张）；角色/道具/图标 var n := Pencil.sprite("hero", Vector2(64, 80), func(s, size): s.rect(Rect2(Vector2.ZERO, size), Pencil.INK, Pencil.color("blue"), true); s.circle(...))，s 支持 rect / circle / ellipse / poly / line / polyline / arrow / text(pos, 文字, 字号)，参数 (形状, 墨色, 填充色, 是否排线, 线宽)，坐标从左上角 (0,0) 到 size；返回的节点以中心为原点。UI 用 control.theme = Pencil.theme(22)，面板 Pencil.style()。颜色只用 Pencil.color("red|orange|yellow|green|teal|blue|purple|pink|brown|gray")、Pencil.INK、Pencil.PAPER。',
   '- 3D：Pencil.environment(self) 设纸张背景；网格 mesh.material_override = Pencil.material(Pencil.color("teal"), "wall")（彩铅明暗 + 屏幕排线 + 墨线描边，第二个参数是贴图美术位）；角色/怪物/道具：先在一个 Node3D 视觉节点下搭好 Pencil.material 着色的网格，再调用 Pencil.actor3d("hero", 1.6, 视觉节点)（原地生效，返回值就是该节点，可不接）；有正式美术时自动隐藏这些网格、换成同高的立绘，没有时就是铅笔网格。玩法和碰撞放在父节点上，不跟美术节点走。',
   '- 美术位 id 用小写英文加下划线（hero、slime、coin、floor、wall、background），同一个东西始终用同一个 id；design_game 的 art 里列出每个美术位和它最终正式美术的样子。正式美术到达时（res://assets/<id>.png）工具包自动替换，尺寸、布局、碰撞完全不变，所以不需要也不能为美术改代码。',
   '- 铅笔稿也要有品质：清楚的轮廓和层次、主次分明的配色、排线表现阴影、动画与反馈（Tween 弹跳、抖动、闪白、飘字、粒子）。不要用纯色方块冒充美术。',
-  '- 从第二轮起，美术子代理会在后台按美术位异步生成正式美术并自动接入、重新构建、复验，不占本轮时间；主流程不要等待它，也不要为美术位调用 generate_asset。generate_asset 只用于背景音乐、音效或美术位之外的特殊素材（kind: background / sprite / texture / model3d / music / sfx），每个游戏最多 ' + MAX_ASSETS + ' 个，每轮数量见档位；首轮 Demo 不生成 AI 素材。已申请的素材未就绪或失败仍须如实报告。',
+  '- 游戏全程保持铅笔手绘风，不要主动改变画风（不换配色体系，不用写实光影、辉光或滤镜盖掉铅笔质感）；打磨在铅笔风内进行。只有用户亲口要求生成素材或正式美术时，本轮说明的「画风与素材」才会开放 generate_asset 或美术子代理；没开放就不要申请任何素材（音乐、音效也不要），可以在下一步建议里提一句由用户决定。',
+  '- 开放正式美术后，美术子代理在后台按美术位异步生成正式美术并自动接入、重新构建、复验，不占本轮时间；主流程不要等待它，也不要为美术位调用 generate_asset。generate_asset 只用于用户要的音乐、音效或美术位之外的特殊素材（kind: background / sprite / texture / model3d / music / sfx），每个游戏最多 ' + MAX_ASSETS + ' 个，每轮数量见档位。已申请的素材未就绪或失败仍须如实报告。',
   '- prompt 写清楚单个主体的外观（颜色、造型、朝向，如"facing right"），风格由 art_bible 统一，不要在一个 sprite 里画多个物体或整张图集。',
   '- 生成好后文件出现在 res://assets/<id>.png|glb|mp3，平台会重新导入并更新预览，工具结果里会提示"素材到了"，本轮结束后才到的素材也会自动出现在游戏里。所以代码一开始就要按"有素材用素材、没有用占位"来写：用 ResourceLoader.exists(path) 判断后再 load(path)（不要 preload 素材），没到时用色块/矢量/基础网格占位，同一份尺寸和碰撞。',
   '- sprite 是 1024x1024 透明底、主体居中但四周有留白：用 AtlasTexture 裁到 tex.get_image().get_used_rect() 再按目标尺寸缩放（scale = 目标高度 / 区域高度），碰撞体按游戏尺寸单独设定，不跟图片走。像素风设 texture_filter = TEXTURE_FILTER_NEAREST。texture 用于平铺：draw_texture_rect(tex, rect, true) 或 TextureRect.stretch_mode = STRETCH_TILE；3D 用 StandardMaterial3D.albedo_texture + uv1_triplanar。',
@@ -259,11 +260,15 @@ export function gpRoleOf(name, input, design) {
   return /\.(tscn|tres|gdshader|gdshaderinc)$|project\.godot$|(view|hud|ui|scene|fx|render|layout|anim|panel|screen|draw|visual|shader|level|map|world|camera|menu)/i.test(f) ? 'C' : 'B';
 }
 
+export const PORTRAIT_3D = '竖屏 3D：每个 Camera3D 设 keep_aspect = Camera3D.KEEP_WIDTH、fov 55–65（此时 fov 是水平视角，否则左右被裁成一条缝）；镜头比横屏更高、更靠后、俯角更大（约 35–55°），主角放在屏幕下方约 1/3，前进方向朝屏幕上方延伸；build_scene 的 camera 也按竖屏取景，关卡沿纵深（-Z）展开而不是横向铺开；HUD 放顶部，摇杆和按钮放底部拇指区。';
+const portrait3d = (dimension, orientation) => dimension === '3d' && orientation === 'portrait' ? PORTRAIT_3D : '';
+
 export function gpBrief(d) {
   const ms = d.milestones.map((m, i) => (i < d.current ? '[已完成] ' : i === d.current ? '[本轮目标] ' : '[之后] ') + m.id + ' ' + m.name + '：' + m.goal + '｜验收：' + m.acceptance.join('；')).join('\n');
   return [
     '# 设计方案：' + d.title + '（' + d.genre + '，' + (d.dimension === '3d' ? '3D' : '2D') + '）', d.pitch,
     '屏幕：' + screenOf(d.orientation).cn + '。',
+    portrait3d(d.dimension, d.orientation),
     d.faithful ? '复刻：' + d.closest_game + '（规则、数值、流程和界面都贴近原作）' : '最接近：' + d.closest_game + (d.differences.length ? '；不同之处：' + d.differences.join('；') : ''),
     '核心循环：' + d.core_loop,
     '规则：\n- ' + d.rules.join('\n- '),
@@ -302,7 +307,7 @@ export class ProjectSession extends CodeSession {
     this.previewFailures = 0;
     this.toolTimeoutMs = opts.toolTimeoutMs;
     this.requireVisibleConstruction = !!opts.requireVisibleConstruction;
-    this.pencilOnly = !!opts.pencilOnly;
+    this.assetKinds = Array.isArray(opts.assetKinds) ? opts.assetKinds.filter(k => ASSET_KINDS.includes(k)) : opts.pencilOnly ? [] : ASSET_KINDS;
     this.activeWatchId = '';
     this.browserPlaytest = opts.browserPlaytest || null;
     this.liveMode = '';
@@ -470,19 +475,20 @@ export class ProjectSession extends CodeSession {
     this.game.design = plan;
     this.hooks.onDesign?.(plan);
     const notes = [];
-    const cap = this.pencilOnly ? 0 : this.limits.assets;
-    for (const a of (Array.isArray(input.assets) ? input.assets : []).slice(0, cap)) {
+    const cap = this.assetKinds.length ? this.limits.assets : 0;
+    for (const a of (Array.isArray(input.assets) ? input.assets : []).filter(a => this.assetKinds.includes(a?.kind)).slice(0, cap)) {
       const err = this.hooks.requestAsset?.(a, { signal: this.signal, deadlineAt: this.workflow.iteration?.wrapAt });
       if (err) notes.push(err); else plan.assets.push({ id: a.id, kind: a.kind, name: a.name });
       if (!err) this.assetRequests++;
     }
-    if (input.assets?.length > cap) notes.push(cap ? '本轮仅安排前 ' + cap + ' 个素材；其他素材留到下一轮，不阻塞本轮交付。' : '首轮 Demo 不生成 AI 素材，全部用铅笔美术位；正式美术从第二轮起由美术子代理按 art 清单异步生成。');
+    if (input.assets?.length > plan.assets.length) notes.push(cap ? '本轮只安排用户要求的素材（' + this.assetKinds.join(' / ') + '），最多 ' + cap + ' 个；其他留到下一轮。' : '用户没有要求生成素材：全部用铅笔美术位画，保持手绘风。');
     return { ok: true, art: plan.art.map(a => a.id), assets: plan.assets.map(a => a.id + ' → res://' + assetPath(a) + '（生成中）'), notes, note: '方案已展示。用 Pencil 工具包按 art 里的美术位 id 画出全部画面，先做一个可玩片段并 preview_checkpoint。' };
   }
 
   async t_generate_asset(a) {
-    if (this.pencilOnly) return { error: '首轮 Demo 不生成 AI 素材：用 Pencil 工具包的美术位画出来，正式美术从第二轮起由美术子代理异步生成。' };
+    if (!this.assetKinds.length) return { error: '用户没有要求生成素材：保持铅笔手绘风，用 Pencil 工具包的美术位画出来。需要素材时由用户提出。' };
     if (!ASSET_KINDS.includes(a.kind)) return { error: 'kind 只能是 ' + ASSET_KINDS.join(' / ') };
+    if (!this.assetKinds.includes(a.kind)) return { error: '用户本轮只要求了 ' + this.assetKinds.join(' / ') + ' 类素材，不能生成 ' + a.kind + '，画面保持铅笔手绘风。' };
     if ((this.game.design?.art || []).some(s => s.id === a.id) && ['sprite', 'background', 'texture'].includes(a.kind)) return { error: a.id + ' 是美术位，正式美术由美术子代理异步生成并自动替换，无需申请。' };
     if (this.assetRequests >= this.limits.assets) return { error: '本轮最多新增 ' + this.limits.assets + ' 个素材，请复用现有资源并留出试玩时间。' };
     if (this.workflow.iteration && delegationBudget(this.workflow.iteration) < 90000) return { error: '剩余制作时间不足，素材升级留到下一轮。' };
@@ -786,9 +792,7 @@ export function tierBrief(iteration) {
   if (iteration?.tier === 'quality') return ['# 档位：品质（全力输出高品质游戏）',
     '- 目标是一款完成度高、可以发布的游戏，而不是一个切片：完整的开始界面、核心循环、进阶内容（多关卡/多波次/多种敌人、卡牌或道具，至少 3 种有意义的变化）、合理的难度曲线、胜负结算与重开。',
     '- 复刻原作时先用 web_fetch 系统调研（规则、数值表、关卡/卡牌/敌人列表、界面布局），本轮最多 ' + t.fetches + ' 次，按原作还原核心系统与内容量。',
-    iteration?.kind === 'demo'
-      ? '- 美术：首轮全部用 Pencil 工具包的美术位画（不生成 AI 素材），design_game 的 art 列全所有美术位；第二轮起美术子代理会异步把它们换成正式美术。'
-      : '- 美术与声音：美术子代理正在后台把美术位换成正式美术，不用等待也不用申请；你负责画面打磨（灯光、WorldEnvironment 辉光/色调、粒子、受击闪白、屏幕震动、飘字、UI 动效），可用 generate_asset 申请背景音乐和 2–3 个关键音效，本轮最多 ' + t.assets + ' 个。新视觉元素继续用新的美术位 id。',
+    '- 画面打磨：粒子、受击闪白、屏幕震动、飘字、UI 动效与转场，画风按「画风与素材」。',
     '- 手感与打磨：每个操作都有动画、音效、粒子或飘字反馈；有转场与 UI 动效；文字清晰、布局不重叠，适配触控。',
     '- 分工：可用 delegate_tasks 并行推进内容与表现，本轮最多 ' + t.delegateBatches + ' 批。仍要小步提交，每个完整片段都 preview_checkpoint，让用户看到画面逐步拼出来。',
     '- 验证：每个大系统接入后都 run_game + game_eval 真实输入试玩，run_test 最多 ' + t.tests + ' 次，断言覆盖开局、核心操作、进阶内容、结算与重开。时间充足时继续打磨，不要提前草草收尾。',
@@ -797,9 +801,7 @@ export function tierBrief(iteration) {
   return ['# 档位：Demo（快速出可玩 Demo）',
     '- 首轮快速交付一个高品质小 Demo：一个场景、一个完整核心循环、统一美术与清楚的操作反馈，具备失败和重开。完整复刻或大型系统分后续轮次逐步补齐。每次后续迭代只聚焦一个最重要的改进。',
     '- 资料查询最多 ' + t.fetches + ' 次，查完马上设计，不要长时间调研。',
-    iteration?.kind === 'demo'
-      ? '- 首轮是铅笔手绘 Demo：不生成任何 AI 素材，所有画面都用 Pencil 工具包的美术位画，并在 design_game 的 art 列全美术位（正式美术从第二轮起由美术子代理异步生成并自动替换）。手绘也要有层次、排线阴影、动画和操作反馈。'
-      : '- 美术子代理正在后台把美术位换成正式美术，不占本轮时间，不要等待也不要为美术位申请素材；本轮专注用户要求的那个改进（玩法、手感、内容）。新视觉元素继续用新的美术位 id。最多 ' + t.assets + ' 个新素材（仅音乐、音效等美术位之外的需要）。',
+    ...(iteration?.kind === 'demo' ? [] : ['- 本轮专注用户要求的那个改进（玩法、手感、内容）。']),
     iteration?.kind === 'demo'
       ? '- 节奏：前 40% 时间内必须 preview_checkpoint 出第一个可玩片段；3D 关卡搭两小批即可，不要在相机、高度、重力等细节上反复调；进入收口后只做试玩和测试。'
       : '- 节奏：上一轮已通过的验收不要先重复，直接动手做本轮改进；改完后用 run_game + game_eval 真实输入试玩一次、run_test 一次收尾。',
@@ -807,17 +809,31 @@ export function tierBrief(iteration) {
     (iteration?.kind === 'demo' ? '- 首轮不委派，亲自写一个最小但完整的主脚本（可以分 2–3 次提交）；' : '- 委派最多 ' + t.delegateBatches + ' 批；') + '玩法测试最多 ' + t.tests + ' 次（首次 + 最多两次修复重验）。'].join('\n');
 }
 
-export function gpTurnPrompt(game, project, userText, isFirst, recap = '', iteration = createIteration({ kind: isFirst ? 'demo' : 'iteration' })) {
+/** What this round may do to the look: pencil by default; assets and finished art only on request. */
+export function artBrief({ assetKinds = [], finalArt = false, limit = 0 } = {}) {
+  return ['# 画风与素材（本轮）',
+    finalArt
+      ? '- 用户已要求正式美术：美术子代理在后台按美术位异步生成并自动替换铅笔稿，不占本轮时间；不要等待，也不要为美术位申请素材。新视觉元素继续用新的美术位 id，design_game 的 art 写清它的样子。'
+      : '- 保持铅笔手绘风：所有画面都用 Pencil 工具包的美术位画，不生成 AI 图片，也不改变整体画风。手绘也要有层次、排线阴影、动画和操作反馈。design_game 的 art 照常列全美术位，日后用户要求正式美术时直接替换。',
+    assetKinds.length
+      ? '- 用户本轮要求了素材：可用 generate_asset 申请 ' + assetKinds.join(' / ') + '，最多 ' + limit + ' 个，只做用户要的那类。'
+      : '- 用户本轮没有要求生成素材：不要调用 generate_asset（音乐、音效也不申请）。'].join('\n');
+}
+
+export function gpTurnPrompt(game, project, userText, isFirst, recap = '', iteration = createIteration({ kind: isFirst ? 'demo' : 'iteration' }), art = {}) {
+  const look = artBrief({ ...art, limit: tierLimits(iteration?.tier).assets });
   const d = game.design;
   const scr = screenOf(game.meta?.orientation);
   const time = '目标 ' + (iteration.targetMs / 60000).toFixed(1) + ' 分钟；第 ' + ((iteration.wrapAt - iteration.startedAt) / 60000).toFixed(1) + ' 分钟开始收口；硬上限 ' + (iteration.hardMs / 60000).toFixed(1) + ' 分钟。';
   const quality = iteration?.tier === 'quality';
   const dim = game.meta?.dimension === '3d' ? '3D' : '';
   if (!d) {
-    return ['【屏幕】' + scr.cn + (dim ? '\n【用户选择】3D 游戏' : '') + (game.meta?.genre_hint ? '\n【类型】' + game.meta.genre_hint : '') + '\n【用户想做的游戏】' + userText,
+    const p3 = portrait3d(game.meta?.dimension, game.meta?.orientation);
+    return ['【屏幕】' + scr.cn + (dim ? '\n【用户选择】3D 游戏' : '') + (p3 ? '\n【' + p3.replace('：', '】') : '') + (game.meta?.genre_hint ? '\n【类型】' + game.meta.genre_hint : '') + '\n【用户想做的游戏】' + userText,
       tierBrief(iteration),
+      look,
       '# 本轮任务\n' + (quality
-        ? '先调研（需要时）并 design_game，再分步做出完整的高品质游戏：先可运行骨架并 preview_checkpoint，然后逐步接入内容、素材、手感与打磨，每个大系统都真实试玩，最后 run_test 有效断言。'
+        ? '先调研（需要时）并 design_game，再分步做出完整的高品质游戏：先可运行骨架并 preview_checkpoint，然后逐步接入内容、手感与打磨，每个大系统都真实试玩，最后 run_test 有效断言。'
         : '先 design_game（art 列全美术位），再用 Pencil 铅笔工具包完成一个场景的精致小 Demo：核心循环、操作反馈、失败与重开。前半轮 preview_checkpoint 展示可玩片段，之后 run_game + game_eval 真实输入试玩，再 run_test 有效断言。其他系统明确留到下一轮。') + time].join('\n\n');
   }
   const parts = [gpBrief(d)];
@@ -832,13 +848,14 @@ export function gpTurnPrompt(game, project, userText, isFirst, recap = '', itera
   const cur = d.milestones[d.current];
   parts.push('# 用户这次说\n「' + userText + '」\n' + (/^(继续|下一步|接着|继续做|go on|continue)/i.test(userText.trim()) && cur ? '→ 推进里程碑 ' + cur.id + ' ' + cur.name + '。' : '→ 按用户要求修改（必要时用 update_plan 调整后续里程碑）。'));
   parts.push(tierBrief(iteration));
+  parts.push(look);
   parts.push((quality ? '本轮可以完整推进用户要求和当前里程碑，并做同等打磨；复用已完成内容。' : '本轮只聚焦用户要求中最重要的一个改进，其余列入下一步；复用已完成内容。') + time);
   return parts.join('\n\n');
 }
 
 /** One turn of the game maker on a Godot project. Returns { session, out }. */
 export async function runProjectBuilder({ game, project, userText, isFirst, hooks, makeCb, signal, recap = '', live = null, onSession, workflow, artifactDir,
-  iterationOptions = {}, agentRunner = runAgent, runWorker, fetchImpl = fetch, toolTimeoutMs, browserPlaytest, model = CODE_MODEL } = {}) {
+  iterationOptions = {}, agentRunner = runAgent, runWorker, fetchImpl = fetch, toolTimeoutMs, browserPlaytest, model = CODE_MODEL, assetKinds = [], finalArt = false } = {}) {
   workflow ||= createWorkflow({ goal: userText, sourceRevision: project.revision() });
   workflow.iteration ||= createIteration({ kind: isFirst ? 'demo' : 'iteration', ...iterationOptions });
   const iteration = workflow.iteration;
@@ -850,14 +867,14 @@ export async function runProjectBuilder({ game, project, userText, isFirst, hook
     onAbort: error => session?.savePartial(String(error?.message || error || '本轮已停止').slice(0, 500), { budgetExpired: error?.code === 'ITERATION_DEADLINE', cancelled: !!signal?.aborted }),
   });
   const budget = { soft: (iteration.wrapAt - iteration.startedAt) / 60000, hard: iteration.hardMs / 60000 };
-  session = new ProjectSession(game, project, { ...hooks, signal: clock.signal }, { budget, live, workflow, artifactDir, runWorker, fetchImpl, toolTimeoutMs, browserPlaytest, model, abortRun: clock.abort, requireVisibleConstruction: isFirst, pencilOnly: isFirst });
+  session = new ProjectSession(game, project, { ...hooks, signal: clock.signal }, { budget, live, workflow, artifactDir, runWorker, fetchImpl, toolTimeoutMs, browserPlaytest, model, abortRun: clock.abort, requireVisibleConstruction: isFirst, assetKinds });
   session.t0 = iteration.startedAt;
-  const messages = [{ role: 'user', content: gpTurnPrompt(game, project, userText, isFirst, recap, iteration) + '\n\n（请全程用中文思考和解说。）' }];
+  const messages = [{ role: 'user', content: gpTurnPrompt(game, project, userText, isFirst, recap, iteration, { assetKinds, finalArt }) + '\n\n（请全程用中文思考和解说。）' }];
   const limits = tierLimits(iteration.tier);
   // A five-minute pencil Demo has no room for worker start-up; the coordinator writes it directly.
   const soloDemo = isFirst && iteration.tier !== 'quality';
-  const tools = (game.design ? TOOLS.filter(t => t.name !== 'design_game') : TOOLS.map(t => t === GP_DESIGN_TOOL ? designToolFor(isFirst ? 0 : limits.assets) : t))
-    .filter(t => !(soloDemo && t.name === 'delegate_tasks'));
+  const tools = (game.design ? TOOLS.filter(t => t.name !== 'design_game') : TOOLS.map(t => t === GP_DESIGN_TOOL ? designToolFor(assetKinds.length ? limits.assets : 0) : t))
+    .filter(t => !(soloDemo && t.name === 'delegate_tasks') && (assetKinds.length || t.name !== 'generate_asset'));
   let out;
   try {
     onSession?.(session); session.checkpoint(); throwIfAborted(clock.signal);

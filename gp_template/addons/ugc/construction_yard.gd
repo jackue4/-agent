@@ -27,6 +27,8 @@ func _ready() -> void:
 	add_child(camera)
 	camera.look_at(Vector3.ZERO)
 	camera.make_current()
+	get_viewport().size_changed.connect(_fit_aspect)
+	_fit_aspect()
 	world_environment = WorldEnvironment.new()
 	var environment := Environment.new()
 	environment.background_mode = Environment.BG_COLOR
@@ -46,6 +48,11 @@ func _ready() -> void:
 	add_child(light)
 	_build_grid()
 	set_actor({"agent": "M", "state": "paused"})
+
+func _fit_aspect() -> void:
+	# fov always spans the short side, so a portrait phone is not cropped to a sliver.
+	var size := get_viewport().get_visible_rect().size
+	camera.keep_aspect = Camera3D.KEEP_WIDTH if size.y > size.x else Camera3D.KEEP_HEIGHT
 
 func _build_grid() -> void:
 	# This is a non-colliding editor measuring grid, never counted as authored geometry.

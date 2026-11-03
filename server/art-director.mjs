@@ -80,6 +80,7 @@ function planBrief(design = {}, meta = {}, slots = []) {
     'Game: ' + (design.title || meta.title || '') + ' — ' + (design.pitch || meta.pitch || ''),
     'Genre: ' + (design.genre || meta.genre || '') + '; ' + (design.dimension === '3d' || meta.dimension === '3d' ? '3D, ' : '2D, ') + (meta.orientation === 'portrait' ? 'portrait' : 'landscape'),
     'Design art bible: ' + (design.art_bible || meta.art_bible || '(none)'),
+    ...(design.art_request ? ['The player asked for finished art with these words; any style they name overrides the art bible: ' + design.art_request] : []),
     'Palette: ' + (design.palette || meta.palette || []).join(' '),
     'Art slots (id | kind | how the code uses it | planned look):',
     ...slots.map(s => '- ' + s.id + ' | ' + s.kind + ' | ' + (s.use ? 'Pencil.' + s.use + (s.size ? ' size ' + s.size.join('x') : '') + ' in ' + s.file : 'planned, not yet in code') + (s.look ? ' | ' + s.look : '')),

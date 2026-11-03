@@ -423,6 +423,7 @@ function setChat(open, restoreFocus = true) {
   });
   chatBtn.setAttribute('aria-expanded', String(open));
   chatBtn.setAttribute('aria-label', open ? '关闭对话记录' : '打开对话记录');
+  placeViewThumb();
   if (open) {
     setWorkflowOpen(false, false);
     delete chatBtn.dataset.unread; scroll();
@@ -856,14 +857,27 @@ function layout() {
   const rotated = landscapePreview && height > width;
   document.body.classList.toggle('preview-rotated', rotated);
   stage.style.setProperty('--previewToolbarH', barHeight + 'px');
-  const frameWidth = Math.floor(landscapePreview ? (rotated ? height : width) : Math.min(width, height * aspect));
-  const frameHeight = Math.floor(landscapePreview ? (rotated ? width : height) : frameWidth / aspect);
+  const previewFill = !document.body.classList.contains('chat-view') && !landscapePreview;
+  const frameWidth = Math.floor(landscapePreview ? (rotated ? height : width) : previewFill ? width : Math.min(width, height * aspect));
+  const frameHeight = Math.floor(landscapePreview ? (rotated ? width : height) : previewFill ? height : frameWidth / aspect);
   frame.style.setProperty('--frameW', frameWidth + 'px'); frame.style.setProperty('--frameH', frameHeight + 'px');
   // Keep fixed-layout games at their authored aspect inside the iframe. Fill
   // the preview surface without clipping HUD/controls or exposing unused world.
   const runtimeHeight = Math.max(1, Math.round(frameWidth / aspect));
   frame.style.setProperty('--runtimeH', runtimeHeight + 'px');
   frame.style.setProperty('--runtimeScaleY', String(frameHeight / runtimeHeight));
+  placeViewThumb();
+}
+let viewThumbReady = false;
+function placeViewThumb() {
+  const seg = $('#viewSeg'), thumb = $('#viewThumb'), active = seg?.querySelector('button.on');
+  if (!thumb || !active || !active.offsetWidth) return;
+  if (!viewThumbReady) thumb.style.transition = 'none';
+  thumb.style.width = active.offsetWidth + 'px';
+  thumb.style.height = active.offsetHeight + 'px';
+  thumb.style.transform = 'translate(' + active.offsetLeft + 'px,' + active.offsetTop + 'px)';
+  seg.classList.add('thumb-ready');
+  if (!viewThumbReady) { thumb.offsetWidth; thumb.style.transition = ''; viewThumbReady = true; }
 }
 function resizeInput() { input.style.height = 'auto'; input.style.height = Math.min(110, input.scrollHeight) + 'px'; layout(); }
 addEventListener('resize', layout);
@@ -876,8 +890,37 @@ input.addEventListener('compositionend', () => { composing = false; });
 input.addEventListener('keydown', event => {
   if (event.key === 'Enter' && !event.shiftKey && !event.isComposing && !composing && event.keyCode !== 229) { event.preventDefault(); send(); }
 });
+let stopVoice = () => {};
+function bindVoiceInput() {
+  const button = $('#voiceBtn');
+  const Recognition = globalThis.SpeechRecognition || globalThis.webkitSpeechRecognition;
+  if (!Recognition) { button.disabled = true; button.title = '当前浏览器不支持语音输入'; return; }
+  const recognition = new Recognition();
+  recognition.lang = 'zh-CN'; recognition.interimResults = true; recognition.continuous = false;
+  let generation = 0, prefix = '';
+  const listening = () => button.getAttribute('aria-pressed') === 'true';
+  const setListening = on => { button.setAttribute('aria-pressed', String(on)); button.title = on ? '停止语音' : '语音输入'; button.setAttribute('aria-label', on ? '停止语音' : '语音输入'); };
+  button.onclick = () => {
+    if (listening()) { recognition.stop(); return; }
+    prefix = input.value.trim(); const current = ++generation;
+    recognition.onresult = event => {
+      if (current !== generation) return;
+      let spoken = '';
+      for (let i = 0; i < event.results.length; i++) spoken += event.results[i][0]?.transcript || '';
+      input.value = [prefix, spoken.trim()].filter(Boolean).join(' ');
+      resizeInput(); renderParticipation();
+    };
+    try { recognition.start(); } catch { setListening(false); }
+  };
+  recognition.onstart = () => setListening(true);
+  recognition.onend = () => setListening(false);
+  recognition.onerror = () => setListening(false);
+  stopVoice = () => { generation++; if (listening()) { try { recognition.stop(); } catch {} } setListening(false); };
+}
+bindVoiceInput();
 async function send() {
   const text = input.value.trim(); if (!text || !proj || composing || participationPending) return;
+  stopVoice();
   if (running || participationAttempt?.key === JSON.stringify([text, focusedModule?.file || ''])) return submitParticipation(text);
   if (modelSelection.pending) { toast('模型选择正在保存，请稍候'); return; }
   input.value = ''; resizeInput(); endStream(); addUser(text); setRunning(true, { reveal: true });
@@ -933,7 +976,17 @@ function setMode(nextMode, silent = false) {
     const active = button.dataset.m === nextMode;
     button.classList.toggle('on', active); button.setAttribute('aria-pressed', String(active));
   });
-  document.body.classList.toggle('playing', nextMode === 'play'); if (nextMode === 'play') setChat(false, false); renderConstructionStatus(); syncSketch(); layout();
+  document.body.classList.toggle('playing', nextMode === 'play');
+  if (nextMode === 'play') { setChat(false, false); setMenu(false); stopVoice(); }
+  for (const el of [$('.etop'), $('#composer')]) {
+    if (nextMode === 'play') { el.setAttribute('inert', ''); el.setAttribute('aria-hidden', 'true'); }
+    else { el.removeAttribute('inert'); el.removeAttribute('aria-hidden'); }
+  }
+  const previewPlay = $('#previewPlay');
+  previewPlay.setAttribute('aria-pressed', String(nextMode === 'play'));
+  previewPlay.setAttribute('aria-label', nextMode === 'play' ? '回到观察' : '试玩');
+  previewPlay.title = nextMode === 'play' ? '回到观察' : '试玩';
+  renderConstructionStatus(); syncSketch(); layout();
   clearTimeout(watchTimer); cancelWatchRequest(); watchFrameEpoch++; watchImagePending = null; renderPlaytest();
   browserTests.sync();
   if (nextMode === 'edit') pollWatch();
@@ -944,6 +997,12 @@ $$('#modeSeg button').forEach(button => { button.onclick = () => {
     if (isGodot() && button.dataset.m === 'play' && !pckUrl && !proj.sceneDirty) { toast('可运行版本生成后就可以试玩'); return; }
   setMode(button.dataset.m);
 }; });
+$('#previewPlay').onclick = () => {
+  if (!proj) return;
+  if (mode === 'play') { setMode('edit'); return; }
+  if (isGodot() && !pckUrl && !proj.sceneDirty) { toast('可运行版本生成后就可以试玩'); return; }
+  setMode('play');
+};
 function setMenu(open) { $('#moreMenu').hidden = !open; $('#moreBtn').setAttribute('aria-expanded', String(open)); }
 $('#moreBtn').onclick = event => { event.stopPropagation(); setMenu($('#moreMenu').hidden); };
 $('#moreMenu').addEventListener('click', event => { if (event.target.closest('button')) setMenu(false); });
@@ -951,6 +1010,7 @@ document.addEventListener('click', event => { if (!event.target.closest('#moreMe
 document.addEventListener('keydown', event => {
   if (event.key !== 'Escape' || event.isComposing) return;
   if (!$('#moreMenu').hidden) { setMenu(false); $('#moreBtn').focus(); }
+  else if (mode === 'play') { event.preventDefault(); setMode('edit'); $('#previewPlay').focus({ preventScroll: true }); }
   else if (!feed.hidden) { event.preventDefault(); setChat(false); }
   else if (!$('#workflowPanel').hidden) { event.preventDefault(); setWorkflowOpen(false); }
 });

@@ -53,7 +53,7 @@ test('quality tier raises asset, test and turn budgets; demo keeps the fast limi
   f.hooks.requestAsset = () => { requested++; return ''; };
   const assets = Array.from({ length: 12 }, (_, i) => ({ id: 'a' + i, kind: 'sprite', name: 'a' + i, prompt: 'p' }));
   const result = await f.session.exec('design_game', { title: 'Big', assets });
-  assert.equal(requested, 10); assert.match(result.notes.join(''), /前 10 个/);
+  assert.equal(requested, 10); assert.match(result.notes.join(''), /最多 10 个/);
   f.project.check = async () => ({ ok: false, loaded: false, sourceRevision: rev, errors: [{ kind: 'error', message: 'broken' }] });
   for (let i = 0; i < 6; i++) assert.equal((await f.session.exec('run_test', { look: false })).error?.includes('次数') ?? false, false);
   assert.match((await f.session.exec('run_test', { look: false })).error, /次数/);
@@ -67,6 +67,38 @@ test('quality tier raises asset, test and turn budgets; demo keeps the fast limi
     assert.match(seen.messages[0].content, tier === 'quality' ? /档位：品质/ : /档位：Demo/);
     assert.match(seen.messages[0].content, /Pencil/);
   }
+});
+
+test('later rounds stay pencil and request no assets unless the player asked for them', async () => {
+  let seen;
+  const design = { title: 'T', pitch: 'p', genre: 'g', closest_game: 'x', differences: [], core_loop: 'c', rules: ['r'], layout: 'l', controls: [['tap', 'jump']],
+    palette: [], art_bible: 'b', modules: [], milestones: [{ id: 'm1', name: 'one', goal: 'g', acceptance: ['a'] }], current: 0, build_steps: ['s'], art: [] };
+  const run = async opts => {
+    const g = fixture({ iteration: false }); g.game.design = design;
+    await runProjectBuilder({ ...g, isFirst: false, userText: 'u', iterationOptions: { tier: 'quality' }, agentRunner: async options => { seen = options; return { done: true }; }, ...opts });
+    return seen;
+  };
+  let r = await run({});
+  assert.equal(r.req.tools.some(t => t.name === 'generate_asset'), false);
+  assert.match(r.messages[0].content, /保持铅笔手绘风/);
+  assert.doesNotMatch(r.messages[0].content, /美术子代理正在后台/);
+  r = await run({ assetKinds: ['music', 'sfx'] });
+  assert.equal(r.req.tools.some(t => t.name === 'generate_asset'), true);
+  assert.match(r.messages[0].content, /music \/ sfx/);
+  r = await run({ assetKinds: ['background', 'sprite', 'texture', 'model3d', 'music', 'sfx'], finalArt: true });
+  assert.match(r.messages[0].content, /用户已要求正式美术/);
+});
+
+test('the builder refuses assets the player did not ask for', async () => {
+  const none = fixture(); let requested = 0;
+  none.hooks.requestAsset = () => { requested++; return ''; };
+  none.session.assetKinds = [];
+  assert.match((await none.session.exec('generate_asset', { id: 'bgm', kind: 'music', name: 'm', prompt: 'p' })).error, /没有要求生成素材/);
+  const sound = fixture(); sound.hooks.requestAsset = () => { requested++; return ''; };
+  sound.session.assetKinds = ['music', 'sfx'];
+  assert.match((await sound.session.exec('generate_asset', { id: 'hero', kind: 'sprite', name: 'h', prompt: 'p' })).error, /只要求了 music \/ sfx/);
+  assert.equal((await sound.session.exec('generate_asset', { id: 'bgm', kind: 'music', name: 'm', prompt: 'p' })).ok, true);
+  assert.equal(requested, 1);
 });
 
 test('old workflows keep their gates; new iterations additionally require current input-play evidence', () => {

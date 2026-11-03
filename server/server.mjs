@@ -24,6 +24,8 @@ import { enqueueParticipation, deliverParticipation } from './participation.mjs'
 import { MODEL_OPTIONS, SKETCH_MODEL, SKETCH_FALLBACK_MODEL, assertModelSelection, resolveModelSelection } from './model-config.mjs';
 import { SketchBoard, SketchArtist } from './sketch.mjs';
 import { ArtDirector, artSlotsIn, mergeSlots } from './art-director.mjs';
+import { assetIntent } from './art-intent.mjs';
+import { ENHANCE_MODEL, enhanceUserPrompt, shouldEnhance } from './prompt-enhance.mjs';
 
 /** New games are full Godot projects unless UGC_ENGINE=classic (spec templates + code SDK). */
 const GP_ON = (process.env.UGC_ENGINE || 'godot') !== 'classic';
@@ -43,7 +45,7 @@ export const projects = new Map();
 const uid = () => crypto.randomBytes(5).toString('hex');
 const now = () => Date.now();
 
-const SAVED_FIELDS = ['id', 'owner', 'created', 'updated', 'game', 'messages', 'chat', 'timeline', 'versions', 'published', 'running', 'prompt', 'draftCover', 'remixOf', 'codeLog', 'interrupted', 'workflow', 'build', 'sceneEdit', 'nextVersion', 'seq', 'log', 'participation', 'model', 'sketch'];
+const SAVED_FIELDS = ['id', 'owner', 'created', 'updated', 'game', 'messages', 'chat', 'timeline', 'versions', 'published', 'running', 'prompt', 'draftCover', 'remixOf', 'codeLog', 'interrupted', 'workflow', 'build', 'sceneEdit', 'nextVersion', 'seq', 'log', 'participation', 'model', 'sketch', 'finalArt', 'artRequest'];
 export class Project {
   constructor(d) {
     Object.assign(this, {
@@ -405,7 +407,7 @@ function artDirectorOf(p) {
   p.artDirector = new ArtDirector({
     slots: () => mergeSlots(p.game.design?.art, artSlotsIn(gpSnapshot(project) || {})),
     shot: () => latestShot(p),
-    design: () => p.game.design || {},
+    design: () => ({ ...(p.game.design || {}), ...(p.artRequest ? { art_request: p.artRequest } : {}) }),
     meta: () => p.game.meta,
     existing: () => p.game.assets || {},
     generateKey: async (spec, signal) => {
@@ -428,8 +430,12 @@ function artDirectorOf(p) {
   });
   return p.artDirector;
 }
+/** Finished art replaces the pencil look only once the player asked for it; games that already carry
+ * a style key frame asked before this rule existed. */
+export const finalArtOf = p => p.finalArt ?? Object.values(p.game?.assets || {}).some(a => a.kind === 'keyart');
+
 export function startArt(p) {
-  if (!isGp(p.game) || !p.game.design || process.env.UGC_ART === '0') return null;
+  if (!isGp(p.game) || !p.game.design || !finalArtOf(p) || process.env.UGC_ART === '0') return null;
   const d = artDirectorOf(p);
   d.start();
   return d;
@@ -518,6 +524,8 @@ export async function runCodeChat(p, text, opts = {}, deps = {}) {
   }
   p.chat.push({ role: 'user', text, t: now() });
   p.emit({ type: 'user', text });
+  const intent = gp ? assetIntent(text) : { finalArt: false, kinds: [] };
+  if (intent.finalArt) { p.finalArt = true; p.artRequest = text.slice(0, 300); }
   const ac = new AbortController();
   const assetRound = new AbortController();
   p.abort = ac;
@@ -644,12 +652,22 @@ export async function runCodeChat(p, text, opts = {}, deps = {}) {
   } else {
     p.emit({ type: 'crew', agent: 'B', state: 'thinking', text: '看看要改哪里…' });
   }
-  const artEnabled = gp && !isFirst && (deps.art ?? !(deps.runProjectBuilder || deps.runBuilder));
+  const artEnabled = gp && finalArtOf(p) && (deps.art ?? !(deps.runProjectBuilder || deps.runBuilder));
   if (artEnabled) { try { startArt(p); } catch (error) { console.error('art start', error); } }
   const live = deps.live || new LiveGame();
   let changedGp = [];
+  // Tests inject the builder and must not call the gateway. Production always enhances first.
+  const enhance = deps.enhancePrompt ?? ((deps.runProjectBuilder || deps.runBuilder) ? null : enhanceUserPrompt);
+  let builderText = text;
+  if (enhance && shouldEnhance(text, model)) {
+    p.emit({ type: 'crew', agent: 'A', state: 'thinking', text: '先把你的想法整理成可执行的做法…' });
+    try {
+      const brief = await enhance({ text, isFirst, design: g.design, signal: ac.signal, model: ENHANCE_MODEL });
+      if (brief) builderText = text + '\n\n' + brief;
+    } catch (error) { console.error('prompt enhance', error); }
+  }
   try {
-    const args = { game: g, userText: text, isFirst, hooks, makeCb, signal: ac.signal, model, iterationOptions, recap: [codeRecap(p), resumeContext(previousWorkflow), gp ? '' : deliverParticipation(p)].filter(Boolean).join('\n\n'), live, workflow: p.workflow, artifactDir: project ? path.join(project.buildDir, 'tasks') : undefined };
+    const args = { game: g, userText: builderText, isFirst, hooks, makeCb, signal: ac.signal, model, iterationOptions, recap: [codeRecap(p), resumeContext(previousWorkflow), gp ? '' : deliverParticipation(p)].filter(Boolean).join('\n\n'), live, workflow: p.workflow, artifactDir: project ? path.join(project.buildDir, 'tasks') : undefined, assetKinds: intent.kinds, finalArt: finalArtOf(p) };
     const { session, out } = gp
       ? await (deps.runProjectBuilder || runProjectBuilder)({ ...args, project, browserPlaytest: browserPlaytestOf(p), onSession: s => { p._gpSession = s; } })
       : await (deps.runBuilder || runBuilder)(args);
@@ -922,6 +940,49 @@ export async function buildEditedScene(p) {
   } catch (error) { return { status: 500, body: { error: String(error.message || error), sceneDirty: !!p.sceneEdit?.dirty } }; }
   finally { p.mutating = false; }
 }
+const SPOTLIGHT = [
+  title => /纸剑幸存者|PaperBlade/.test(title) && !/改编/.test(title),
+  title => /StickBonk|火柴人大乱斗/.test(title) && !/改编/.test(title),
+  title => /星刃/.test(title) && !/改编/.test(title),
+  title => /跳一跳/.test(title),
+  title => /僵尸危机3/.test(title) && /平台协作/.test(title),
+  title => /消消乐/.test(title) && !/改编/.test(title),
+  title => /羊了个羊/.test(title),
+  title => title === '小丑牌',
+];
+function spotlightRank(title) {
+  const text = String(title || '');
+  const index = SPOTLIGHT.findIndex(match => match(text));
+  return index < 0 ? SPOTLIGHT.length : index;
+}
+const hotScore = g => (g.plays || 0) + (g.likes || 0) * 3;
+function orderFeed(list, sort) {
+  const byFreshness = (x, y) => (y.t || 0) - (x.t || 0);
+  const byHeat = (x, y) => hotScore(y) - hotScore(x) || byFreshness(x, y);
+  if (sort === 'new') return [...list].sort(byFreshness);
+  const picked = new Set(), head = [];
+  for (let rank = 0; rank < SPOTLIGHT.length; rank++) {
+    const hits = list.filter(g => spotlightRank(g.title) === rank).sort(byHeat);
+    if (!hits.length) continue;
+    head.push(hits[0]);
+    picked.add(hits[0].id);
+  }
+  const rest = list.filter(g => !picked.has(g.id));
+  rest.sort((x, y) => (x.featured === y.featured ? 0 : x.featured ? -1 : 1) || byHeat(x, y));
+  return [...head, ...rest];
+}
+function playableProject(p) { return isGp(p.game) && !!(p.build?.buildId || p.game.meta.pck_version); }
+function spotlightDraft(p) {
+  const rank = spotlightRank(p?.game?.meta?.title);
+  if (!p || p.published || rank >= SPOTLIGHT.length || !playableProject(p)) return null;
+  const published = [...projects.values()].some(item => item.published && spotlightRank(item.published.game?.meta?.title) === rank);
+  return published ? null : p;
+}
+function previewFeedItem(p) {
+  const g = p.game;
+  return { id: p.id, title: g.meta.title, pitch: g.meta.pitch || '', dimension: g.meta.dimension, orientation: g.meta.orientation || 'landscape', engine: g.meta.engine || '', genre: g.meta.genre, style: g.meta.style, cover: p.draftCover || '', author: '造梦玩家', plays: 0, likes: 0, t: p.updated || 0, prompt: p.prompt, remixOf: p.remixOf || null, featured: false };
+}
+
 function feedItem(p) {
   const g = p.published.game;
   return { id: p.id, title: g.meta.title, pitch: g.meta.pitch || '', dimension: g.meta.dimension, orientation: g.meta.orientation || 'landscape', engine: g.meta.engine || '', genre: g.meta.genre, style: g.meta.style, cover: p.published.cover, author: p.published.author || '造梦玩家', plays: p.published.plays || 0, likes: p.published.likes || 0, t: p.published.t, prompt: p.prompt, remixOf: p.remixOf || null, featured: !!p.published.featured };
@@ -996,13 +1057,16 @@ export async function requestHandler(req, res) {
       const [, a, id, b] = parts;
       if (a === 'models' && !id && req.method === 'GET') return send(res, 200, { models: MODEL_OPTIONS, defaultModel: CODE_MODEL });
       if (a === 'feed' && req.method === 'GET') {
-        const list = [...projects.values()].filter(p => p.published).map(feedItem);
         const sort = url.searchParams.get('sort') || 'hot';
-        list.sort((x, y) => {
-          if (sort !== 'new' && x.featured !== y.featured) return x.featured ? -1 : 1;
-          return sort === 'new' ? y.t - x.t : (y.plays + y.likes * 3) - (x.plays + x.likes * 3) || y.t - x.t;
-        });
-        return send(res, 200, list);
+        const list = [...projects.values()].filter(p => p.published).map(feedItem);
+        if (sort !== 'new') {
+          for (let rank = 0; rank < SPOTLIGHT.length; rank++) {
+            if (list.some(g => spotlightRank(g.title) === rank)) continue;
+            const drafts = [...projects.values()].filter(p => spotlightDraft(p) && spotlightRank(p.game.meta.title) === rank).sort((a, b) => (b.updated || 0) - (a.updated || 0));
+            if (drafts[0]) list.push(previewFeedItem(drafts[0]));
+          }
+        }
+        return send(res, 200, orderFeed(list, sort));
       }
       if (a === 'me' && req.method === 'GET') {
         const mine = [...projects.values()].filter(p => p.owner === 'me').sort((x, y) => y.updated - x.updated).map(p => ({ id: p.id, title: p.game.meta.title, dimension: p.game.meta.dimension, orientation: p.game.meta.orientation || 'landscape', entities: Object.keys(p.game.entities).length, published: !!p.published, cover: p.published?.cover || p.draftCover || '', updated: p.updated, plays: p.published?.plays || 0, likes: p.published?.likes || 0 }));
@@ -1010,7 +1074,12 @@ export async function requestHandler(req, res) {
       }
       if (a === 'games' && id && req.method === 'GET' && !b) {
         const p = projects.get(id);
-        if (!p || !p.published) return send(res, 404, { error: 'not found' });
+        if (!p) return send(res, 404, { error: 'not found' });
+        if (!p.published) {
+          const draft = spotlightDraft(p);
+          if (!draft) return send(res, 404, { error: 'not found' });
+          return send(res, 200, { ...previewFeedItem(draft), spec: draft.game, assets: draft.assetStates(), build: buildView(draft.build), pck: pckUrl(draft) });
+        }
         return send(res, 200, { ...feedItem(p), spec: p.published.game, assets: p.published.assets, build: p.published.build || null, pck: p.published.pck ? '/api/games/' + p.id + '/game.pck?' + (p.published.build ? 'build=' + p.published.build.buildId : 't=' + p.published.t) : null });
       }
       if (a === 'games' && id && b === 'game.pck' && req.method === 'GET') {

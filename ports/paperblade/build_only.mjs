@@ -1,0 +1,23 @@
+// Rebuild the web pack of an already-imported port and refresh its project record (build + published build).
+import fs from 'node:fs';
+import path from 'node:path';
+import { GodotProject } from '../../server/gproject.mjs';
+import { recordEvidence } from '../../server/workflow.mjs';
+const data = process.env.UGC_DATA_DIR;
+if (!data) throw new Error('Set UGC_DATA_DIR');
+const id = process.argv[2] || 'paperblade_port';
+const file = path.join(data, 'projects', id + '.json');
+const project = new GodotProject(id);
+const build = await project.build({ full: process.argv.includes('--full') });
+console.error('build', JSON.stringify({ ok: build.ok, error: String(build.error || '').slice(-1500), buildId: build.buildId, version: build.version, bytes: build.bytes }));
+if (!build.ok) process.exit(1);
+const p = JSON.parse(fs.readFileSync(file, 'utf8'));
+recordEvidence(p.workflow, { kind: 'build', ...build });
+const { path: _p, ...meta } = build;
+p.build = meta; p.game.meta.pck_version = build.version;
+p.workflow.completionRequested = true; p.workflow.status = 'ready';
+const t = Date.now();
+p.published = { game: structuredClone(p.game), assets: {}, cover: process.env.COVER || p.published?.cover || '', t, pck: true, build: meta, author: '造梦官方', plays: p.published?.plays || 0, likes: p.published?.likes || 0, featured: true };
+p.updated = t;
+fs.writeFileSync(file, JSON.stringify(p));
+console.log(JSON.stringify({ id, buildId: build.buildId }));

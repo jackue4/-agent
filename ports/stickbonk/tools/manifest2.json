@@ -1,0 +1,111 @@
+[
+ {
+  "id": "enemy_slimeking",
+  "prompt": "monster game boss sprite, side view facing right: a gigantic king slime boss, huge wobbling translucent green jelly body with smaller slimes and bones floating inside, a tiny tilted golden crown on top, big furious googly eyes, enormous grinning mouth with drool, dripping goo, massive round silhouette"
+ },
+ {
+  "id": "enemy_batqueen",
+  "prompt": "monster game boss sprite, side view facing right: a vampire bat queen boss, large purple bat monster with enormous spread tattered wings, a dark red royal cape and a silver tiara, glowing red eyes, long fangs, sharp claws, menacing flying pose, wings spread wide"
+ },
+ {
+  "id": "prop_bamboo",
+  "prompt": "game prop sprite, three-quarter front view: a short cluster of three thick green bamboo stalks with leaves, cut tops, single object standing upright"
+ },
+ {
+  "id": "prop_obsidian",
+  "prompt": "game prop sprite, three-quarter front view: a jagged black volcanic obsidian rock with glowing orange lava cracks, single object"
+ },
+ {
+  "id": "prop_icecrystal",
+  "prompt": "game prop sprite, three-quarter front view: a cluster of big pale blue ice crystals with white frost and sparkles, single object"
+ },
+ {
+  "id": "ground_bamboo",
+  "sprite": false,
+  "prompt": "seamless tileable top-down ground texture for a 2D arena game: mossy green forest floor of a bamboo grove, scattered bamboo leaves, small stones and soft grass patches, muted greens and earthy browns, low contrast so characters stand out, hand-inked comic style texture with light halftone dots and sparse ink hatching, evenly distributed details, no objects, flat top-down, edges must tile seamlessly"
+ },
+ {
+  "id": "ground_volcano",
+  "sprite": false,
+  "prompt": "seamless tileable top-down ground texture for a 2D arena game: dark cracked volcanic basalt ground with thin glowing orange lava veins and ash, charcoal greys with warm orange accents, low contrast, hand-inked comic style texture with halftone dots and ink hatching, evenly distributed details, no objects, flat top-down, edges must tile seamlessly"
+ },
+ {
+  "id": "ground_ice",
+  "sprite": false,
+  "prompt": "seamless tileable top-down ground texture for a 2D arena game: frozen icy tundra ground, pale blue ice sheets with white snow patches and fine cracks, cool light blues and whites, low contrast, hand-inked comic style texture with light halftone dots and sparse ink hatching, evenly distributed details, no objects, flat top-down, edges must tile seamlessly"
+ },
+ {
+  "id": "hero_red",
+  "prompt": "character portrait bust for a select screen: a black stickman hero with a round black head, fierce white eyes, a red headband and flowing red scarf, raising a clenched fist confidently"
+ },
+ {
+  "id": "hero_sumo",
+  "prompt": "character portrait bust for a select screen: a huge round chubby black stickman sumo wrestler with a topknot hairdo and a white mawashi belt rope, fierce white eyes, flexing, stomping pose"
+ },
+ {
+  "id": "hero_ninja",
+  "prompt": "character portrait bust for a select screen: a slim black stickman ninja with a dark purple mask and long purple scarf, narrow white eyes, holding a kunai, crouched fast pose"
+ },
+ {
+  "id": "hero_drunk",
+  "prompt": "character portrait bust for a select screen: a black stickman drunken kung fu master with rosy cheeks blush, holding a brown gourd wine bottle, swaying pose, sleepy grin, green sash"
+ },
+ {
+  "id": "weapon_gloves",
+  "prompt": "game item icon: a pair of red boxing gloves with white cuffs, single object"
+ },
+ {
+  "id": "weapon_nunchaku",
+  "prompt": "game item icon: a pair of wooden nunchaku sticks connected by a steel chain, single object"
+ },
+ {
+  "id": "weapon_hammer",
+  "prompt": "game item icon: a huge iron war sledgehammer with a wooden handle and steel bands, single object"
+ },
+ {
+  "id": "weapon_staff",
+  "prompt": "game item icon: a long red lacquered kung fu bo staff with golden metal end caps, diagonal, single object"
+ },
+ {
+  "id": "icon_frost",
+  "sprite": false,
+  "prompt": "round game skill icon: an exploding ring of sharp pale blue ice shards bursting outward with frost mist, inside a circular badge, square image filled edge to edge, no text"
+ },
+ {
+  "id": "icon_combo_thunderflash",
+  "sprite": false,
+  "prompt": "round game skill icon: a black stickman doing a flying kick wrapped in crackling yellow lightning, leaving a jagged electric trail, inside a circular golden badge, square image filled edge to edge, no text"
+ },
+ {
+  "id": "icon_combo_thousand",
+  "sprite": false,
+  "prompt": "round game skill icon: many black stickman fists punching at once in a fan, like a thousand hands, purple shadow afterimages and pink flaming gloves, inside a circular golden badge, square image filled edge to edge, no text"
+ },
+ {
+  "id": "icon_combo_quake",
+  "sprite": false,
+  "prompt": "round game skill icon: a giant fist slamming the ground creating three blue shockwave rings and flying rock debris, inside a circular golden badge, square image filled edge to edge, no text"
+ },
+ {
+  "id": "icon_combo_firemeteor",
+  "sprite": false,
+  "prompt": "round game skill icon: a monster launched into the sky turning into a flaming orange meteor crashing down, inside a circular golden badge, square image filled edge to edge, no text"
+ },
+ {
+  "id": "icon_combo_bloodshadow",
+  "sprite": false,
+  "prompt": "round game skill icon: a dark crimson shadow stickman clone slashing with red blood mist and a glowing red heart, inside a circular golden badge, square image filled edge to edge, no text"
+ },
+ {
+  "id": "icon_combo_gravity",
+  "sprite": false,
+  "prompt": "round game skill icon: a swirling purple and blue gravity vortex pulling rocks and small monsters toward a central fist, inside a circular golden badge, square image filled edge to edge, no text"
+ },
+ {
+  "id": "dojo_bg",
+  "sprite": false,
+  "w": 1536,
+  "h": 1024,
+  "prompt": "wide comic book background illustration of a traditional kung fu dojo interior, wooden floor, red pillars, hanging scrolls and paper lanterns, weapon racks with staffs and nunchaku, training dummies, warm evening light through paper windows, empty room with no characters, dramatic perspective, leave the center area calm for UI"
+ }
+]

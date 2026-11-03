@@ -24,12 +24,12 @@ export function openCreate(options={}){
  function sync(){
   $$('.creation-modes button',modal).forEach(b=>{const on=b.dataset.tier===st.tier;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on));});
   $('#cDescription',modal).textContent=st.tier==='quality'?'多一点耐心，打磨画面、玩法和细节。':'先把灵感变成可玩的 Demo，再一起慢慢完善。';
-  $('#cPrompt',modal).value=st.prompt;$('#cCount',modal).textContent=st.prompt.length+' / 2000';$('#cDimension',modal).value=st.dim;$('#cOrientation',modal).value=st.ori;$('#cDimension',modal).disabled=!!st.remix;$('#cOrientation',modal).disabled=!!st.remix||st.dim==='3d';
+  $('#cPrompt',modal).value=st.prompt;$('#cCount',modal).textContent=st.prompt.length+' / 2000';$('#cDimension',modal).value=st.dim;$('#cOrientation',modal).value=st.ori;$('#cDimension',modal).disabled=!!st.remix;$('#cOrientation',modal).disabled=!!st.remix;
   const context=$('#remixContext',modal);context.hidden=!st.remix;if(st.remix){context.innerHTML=`${artwork(st.remix)}<div><small>REMIX 灵感来源</small><b>${esc(st.remix.title)}</b></div><button type="button" id="cClearRemix" aria-label="取消 Remix">${icon('close')}</button>`;$('#cClearRemix',modal).onclick=()=>{st.remix=null;save();sync();};coverFallbacks(context);$('#cPrompt',modal).placeholder='你想怎么改编？比如换个主角、增加关卡、改变画风…';}else $('#cPrompt',modal).placeholder='想做什么游戏？\n比如：一只在月球开拉面店的小猫…';
  }
  $$('.creation-modes button',modal).forEach(b=>b.onclick=()=>{if(st.creating)return;st.tier=b.dataset.tier;save();sync();});
  $('#cPrompt',modal).oninput=e=>{st.prompt=e.target.value;save();$('#cCount',modal).textContent=st.prompt.length+' / 2000';$('#cError',modal).hidden=true;e.target.removeAttribute('aria-invalid');};
- $('#cDimension',modal).onchange=e=>{st.dim=e.target.value;if(st.dim==='3d')st.ori='landscape';save();sync();};$('#cOrientation',modal).onchange=e=>{st.ori=e.target.value;save();};
+ $('#cDimension',modal).onchange=e=>{st.dim=e.target.value;save();sync();};$('#cOrientation',modal).onchange=e=>{st.ori=e.target.value;save();};
  const ideas=['做一款纸飞机穿越云朵的游戏，点击滑翔，收集沿途的星星。','经营一家月球拉面店，招待奇奇怪怪的外星客人。','一只小企鹅在冰面上漂移转弯，躲开裂缝到达终点。'];let ideaIndex=0;
  $('#cIdea',modal).onclick=()=>{st.prompt=st.remix?'把这款游戏改成梦幻夜晚的风格，加入新的挑战关卡。':ideas[ideaIndex++%ideas.length];save();sync();$('#cPrompt',modal).focus();};
  $('#createForm',modal).onsubmit=async e=>{e.preventDefault();if(st.creating)return;st.prompt=$('#cPrompt',modal).value.trim();if(!st.prompt){$('#cError',modal).textContent='先写下你的游戏想法，再开始创造。';$('#cError',modal).hidden=false;$('#cPrompt',modal).setAttribute('aria-invalid','true');$('#cPrompt',modal).focus();return;}if(!models.loaded||!st.model){$('#cError',modal).textContent='创作服务还未就绪，请展开设置重新加载。';$('#cError',modal).hidden=false;return;}

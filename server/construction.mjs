@@ -63,7 +63,7 @@ export function constructionScaffold(snapshot) {
   const v = x => 'Vector3(' + x.join(', ') + ')';
   return {
     'main.tscn': '[gd_scene load_steps=3 format=3]\n[ext_resource type="Script" path="res://main.gd" id="1"]\n[ext_resource type="PackedScene" path="res://scenes/construction.tscn" id="2"]\n[node name="Main" type="Node3D"]\nscript = ExtResource("1")\n[node name="Construction" parent="." instance=ExtResource("2")]\n',
-    'main.gd': 'extends Node3D\n\nfunc _ready() -> void:\n\tvar camera := Camera3D.new()\n\tadd_child(camera)\n\tcamera.position = ' + v(snapshot.camera.position) + '\n\tcamera.look_at(' + v(snapshot.camera.lookAt) + ', Vector3.UP)\n\tcamera.current = true\n\tvar sun := DirectionalLight3D.new()\n\tadd_child(sun)\n\tsun.rotation_degrees = Vector3(-50, -25, 0)\n\tsun.light_energy = 1.4\n',
+    'main.gd': 'extends Node3D\n\nfunc _ready() -> void:\n\tvar camera := Camera3D.new()\n\tadd_child(camera)\n\tcamera.position = ' + v(snapshot.camera.position) + '\n\tcamera.look_at(' + v(snapshot.camera.lookAt) + ', Vector3.UP)\n\tcamera.current = true\n\tvar view := get_viewport().get_visible_rect().size\n\tif view.y > view.x:\n\t\tcamera.keep_aspect = Camera3D.KEEP_WIDTH\n\t\tcamera.fov = 60.0\n\tvar sun := DirectionalLight3D.new()\n\tadd_child(sun)\n\tsun.rotation_degrees = Vector3(-50, -25, 0)\n\tsun.light_energy = 1.4\n',
   };
 }
 

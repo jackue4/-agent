@@ -102,6 +102,25 @@ test('Remix handoff puts the modification prompt into Chat despite the copied as
   assert.equal(existing.$('#input').value, '');
 });
 
+test('preview play button toggles play and observation without the old mode switch', async () => {
+  const h = await boot({ status: 'completed' });
+  const play = h.$('#previewPlay');
+  play.onclick();
+  assert.equal(h.context.editorTest.getMode(), 'play');
+  assert.equal(play['aria-pressed'], 'true');
+  assert.equal(play['aria-label'], '回到观察');
+  assert.equal(h.context.document.body.classList.contains('playing'), true);
+  assert.equal(h.$('#composer')['aria-hidden'], 'true');
+  assert.equal(h.$('.etop').inert, '');
+  play.onclick();
+  assert.equal(h.context.editorTest.getMode(), 'edit');
+  assert.equal(play['aria-pressed'], 'false');
+  assert.equal(h.context.document.body.classList.contains('playing'), false);
+  assert.equal(h.$('#composer')['aria-hidden'], undefined);
+  assert.equal(h.$('.etop').inert, undefined);
+  assert.equal(h.$('#voiceBtn').disabled, true);
+});
+
 test('landscape Preview swaps only the game dimensions, fills the surface, and restores portrait Chat without reloading', async () => {
   const h = await boot({ status: 'completed' });
   const values = new Map();
@@ -123,6 +142,16 @@ test('landscape Preview swaps only the game dimensions, fills the surface, and r
   h.context.editorTest.getProject().game.meta.orientation = 'portrait';
   h.context.editorTest.setChat(false, false);
   assert.equal(h.context.document.body.classList.contains('preview-rotated'), false);
+  assert.equal(h.context.document.body.classList.contains('landscape-preview'), false);
+  h.context.editorTest.getProject().game.meta.orientation = 'landscape';
+  h.context.editorTest.setMode('play');
+  assert.equal(h.context.document.body.classList.contains('playing'), true);
+  assert.equal(h.context.document.body.classList.contains('preview-rotated'), true);
+  assert.equal(values.get('--frameW'), '700px', 'Landscape play keeps the wide game and turns it to fill the screen');
+  assert.equal(values.get('--frameH'), '416px');
+  h.context.editorTest.setMode('edit');
+  h.context.editorTest.getProject().game.meta.orientation = 'portrait';
+  h.context.editorTest.layout();
   assert.equal(h.context.document.body.classList.contains('landscape-preview'), false);
 });
 

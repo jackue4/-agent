@@ -125,8 +125,13 @@ test('gp prompts: native Godot is described, follow-ups list the project', () =>
   const fresh = gpTurnPrompt({ meta: { orientation: 'portrait', dimension: '3d' } }, fake, '做一个 3D 跑酷', true);
   assert.match(fresh, /竖屏/);
   assert.match(fresh, /3D 游戏/);
+  assert.match(fresh, /【竖屏 3D】.*KEEP_WIDTH/);
+  assert.doesNotMatch(gpTurnPrompt({ meta: { orientation: 'landscape', dimension: '3d' } }, fake, '做一个 3D 跑酷', true), /KEEP_WIDTH/);
+  assert.doesNotMatch(gpTurnPrompt({ meta: { orientation: 'portrait' } }, fake, '做一个跑酷', true), /KEEP_WIDTH/);
   const d = { ...normalizePlan({ title: '跑酷', rules: ['跳'] }), dimension: '3d' };
   assert.match(gpBrief(d), /3D/);
+  assert.doesNotMatch(gpBrief(d), /KEEP_WIDTH/);
+  assert.match(gpBrief({ ...d, orientation: 'portrait' }), /竖屏 3D：.*KEEP_WIDTH/);
   const next = gpTurnPrompt({ meta: {}, design: d }, fake, '把跳跃调高一点', false, '- 用户：「做跑酷」→ 能跑');
   assert.match(next, /# 工程文件\nmain\.gd\nmain\.tscn/);
   assert.match(next, /2\| func _ready/);
